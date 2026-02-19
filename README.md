@@ -103,6 +103,59 @@ Vite et gourmand/
 - Horaires
 - Liens utiles
 
+## 🔧 Backend API
+
+Le projet inclut un **backend complet en PHP** avec sécurité et conformité:
+
+### Architecture
+
+```
+backend/
+├── api/index.php              # API REST
+├── config/
+│   ├── Database.php           # Connexion MySQL
+│   ├── JWTHandler.php         # Authentification JWT
+│   ├── AuthHelper.php         # Vérification permission
+│   ├── PermissionManager.php  # RBAC avancé
+│   └── AuditLogger.php        # Journalisation d'audit
+├── models/                    # Modèles CRUD
+└── etape5.1-audit.sql         # Schéma audit complet
+```
+
+### Étapes d'implémentation
+
+| Étape | Feature | Documentation | Test |
+|-------|---------|---------------|------|
+| **Base** | Modèles CRUD | `backend/README.md` | `test.html` |
+| **3** | JWT Auth | `ETAPE3-JWT-GUIDE.md` | `test-etape3.html` |
+| **4** | Endpoints sécurisés | `ETAPE4-PROTECTION-GUIDE.md` | `test-etape4.html` |
+| **5** | Rôles & Permissions | `ETAPE5-RBAC-GUIDE.md` | `test-etape5.html` |
+| **5.1** | Audit Logging 🆕 | `ETAPE5.1-AUDIT-GUIDE.md` | `test-etape5.1.html` |
+
+### Étape 5.1 - Audit Logging
+
+Système complet de journalisation d'audit pour:
+- ✅ **Conformité** - GDPR, HIPAA, PCI-DSS
+- ✅ **Sécurité** - Tracer toutes les opérations sensibles
+- ✅ **Investigation** - Rechercher qui a fait quoi et quand
+- ✅ **Analytics** - Voir les tendances d'accès
+
+**Fonctionnalités:**
+- Journalisation automatique des CRUD (create, update, delete)
+- Filtrage & recherche avancée par utilisateur, action, ressource, période
+- Statistiques en temps réel (succès/refusés)
+- Export CSV pour conformité
+- Rétention configurable (90-730 jours par ressource)
+- Nettoyage automatique des logs expirés
+- Détection IP client (proxy/Cloudflare compatible)
+
+**Lancer les tests:**
+1. `php -S localhost:8000` (dans `backend/`)
+2. Importer `backend/etape5.1-audit.sql` dans MySQL
+3. Ouvrir `test-etape5.1.html` dans le navigateur
+
+Pour l'installation détaillée: voir `ETAPE5.1-INSTALLATION.md`
+
 ## Customisation
 
 ### Couleurs

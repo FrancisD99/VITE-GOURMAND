@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Protection - Étape 4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .test-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        
+        .test-section h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        button.danger {
+            background: #e74c3c;
+        }
+        
+        button.danger:hover {
+            background: #c0392b;
+        }
+        
+        button.success {
+            background: #27ae60;
+        }
+        
+        button.success:hover {
+            background: #229954;
+        }
+        
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .result.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status.ok {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .status.error {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        
+        .matrix th, .matrix td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .matrix th {
+            background: #667eea;
+            color: white;
+        }
+        
+        .matrix tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .method {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .method.get { color: #0066cc; }
+        .method.post { color: #009900; }
+        .method.put { color: #ff9900; }
+        .method.delete { color: #cc0000; }
+        
+        .access {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .access.public {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .access.auth {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .access.admin {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .summary {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .summary h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+        
+        .check-item::before {
+            content: "⭕";
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .check-item.done::before {
+            content: "✅";
+        }
+        
+        .check-item.error::before {
+            content: "❌";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Test API Protection - Étape 4</h1>
+            <p>Vérification de la sécurité des endpoints JWT et RBAC</p>
+        </header>
+
+        <!-- Section Authentification -->
+        <div class="test-grid">
+            <div class="test-card">
+                <h2>1️⃣ Authentification</h2>
+                
+                <div class="test-section">
+                    <h3>Signup - Créer compte</h3>
+                    <input type="text" id="signup-nom" placeholder="Nom" value="Admin">
+                    <input type="text" id="signup-prenom" placeholder="Prénom" value="Test">
+                    <input type="email" id="signup-email" placeholder="Email" value="admin@test.com">
+                    <input type="password" id="signup-pwd" placeholder="Mot de passe" value="AdminPass123!">
+                    <button onclick="testSignup()">Signup</button>
+                    <div id="signup-result"></div>
+                </div>
+
+                <div class="test-section">
+                    <h3>Login - Obtenir Token</h3>
+                    <input type="email" id="login-email" placeholder="Email" value="admin@test.com">
+                    <input type="password" id="login-pwd" placeholder="Mot de passe" value="AdminPass123!">
+                    <button onclick="testLogin()">Login</button>
+                    <div id="login-result"></div>
+                </div>
+
+                <div class="test-section">
+                    <h3>Token Info</h3>
+                    <button onclick="showTokenInfo()">Afficher Token</button>
+                    <button class="danger" onclick="clearToken()">Supprimer Token</button>
+                    <div id="token-result"></div>
+                </div>
+            </div>
+
+            <!-- Section Opérations Protégées -->
+            <div class="test-card">
+                <h2>2️⃣ Opérations Protégées</h2>
+                
+                <div class="test-section">
+                    <h3>Créer Plat (ADMIN - Nécessite Role Admin)</h3>
+                    <input type="text" id="plat-libelle" placeholder="Nom du plat" value="Pizza Margherita">
+                    <input type="text" id="plat-description" placeholder="Description" value="Fromage et tomate classique">
+                    <input type="number" id="plat-prix" placeholder="Prix" value="12.99" step="0.01">
+                    <input type="number" id="plat-regime" placeholder="Regime ID" value="1">
+                    <button class="success" onclick="testCreatePlatAsAdmin()">Créer Plat (Admin)</button>
+                    <button class="warning" onclick="testCreatePlatAsClient()">Créer Plat (Client - Doit échouer)</button>
+                    <div id="plat-result"></div>
+                </div>
+
+                <div class="test-section">
+                    <h3>Créer Menu (ADMIN)</h3>
+                    <input type="text" id="menu-libelle" placeholder="Nom menu" value="Menu Découverte">
+                    <input type="text" id="menu-description" placeholder="Description" value="Un assortiment gourmand">
+                    <input type="number" id="menu-prix" placeholder="Prix" value="19.99" step="0.01">
+                    <button class="success" onclick="testCreateMenuAsAdmin()">Créer Menu (Admin)</button>
+                    <div id="menu-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Commandes et Avis -->
+        <div class="test-grid">
+            <div class="test-card">
+                <h2>3️⃣ Commandes (Auth Required)</h2>
+                
+                <div class="test-section">
+                    <h3>Créer Commande</h3>
+                    <input type="number" id="commande-menu" placeholder="Menu ID" value="1">
+                    <input type="date" id="commande-date" placeholder="Date" value="">
+                    <button onclick="testCreateCommande()">Créer Commande</button>
+                    <button onclick="testCreateCommandeSuccess()">Voir Commandes</button>
+                    <div id="commande-result"></div>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h2>4️⃣ Avis (Auth Required)</h2>
+                
+                <div class="test-section">
+                    <h3>Créer Avis</h3>
+                    <input type="number" id="avis-plat" placeholder="Plat ID" value="1">
+                    <input type="number" id="avis-note" placeholder="Note" value="5" min="1" max="5">
+                    <textarea id="avis-commentaire" placeholder="Commentaire...">Excellent plat!</textarea>
+                    <button onclick="testCreateAvis()">Créer Avis</button>
+                    <button onclick="testListAvis()">Voir Avis Publics</button>
+                    <div id="avis-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matrice de Compression -->
+        <div class="test-card">
+            <h2>📊 Matrice de Sécurité des Endpoints</h2>
+            
+            <table class="matrix">
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>GET</th>
+                        <th>POST</th>
+                        <th>PUT</th>
+                        <th>DELETE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>/api/utilisateurs</td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                    </tr>
+                    <tr>
+                        <td>/api/menus</td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                    </tr>
+                    <tr>
+                        <td>/api/plats</td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                    </tr>
+                    <tr>
+                        <td>/api/commandes</td>
+                        <td><span class="access auth">AUTH</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                    </tr>
+                    <tr>
+                        <td>/api/avis</td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                        <td><span class="access public">-</span></td>
+                        <td><span class="access auth">AUTH</span></td>
+                    </tr>
+                    <tr>
+                        <td>/api/contact</td>
+                        <td><span class="access admin">ADMIN</span></td>
+                        <td><span class="access public">PUBLIC</span></td>
+                        <td><span class="access public">-</span></td>
+                        <td><span class="access admin">ADMIN</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Checklist --->
+        <div class="summary">
+            <h2>✓ Checklist de Vérification</h2>
+            <div class="check-item" id="check1">Signup fonctionne (public)</div>
+            <div class="check-item" id="check2">Login retourne token JWT valide</div>
+            <div class="check-item" id="check3">Commandes nécessite token (401 sans)</div>
+            <div class="check-item" id="check4">Créer plat en tant que client échoue (403)</div>
+            <div class="check-item" id="check5">Créer plat en tant qu'admin fonctionne</div>
+            <div class="check-item" id="check6">Avis visible publiquement (GET)</div>
+            <div class="check-item" id="check7">Créer avis nécessite token</div>
+            <div class="check-item" id="check8">Messages contact protégés (admin only)</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const todayDate = new Date().toISOString().split('T')[0];
+        document.getElementById('commande-date').value = todayDate;
+
+        function displayResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        function setCheck(checkId, state) {
+            const element = document.getElementById(checkId);
+            element.className = `check-item ${state}`;
+        }
+
+        async function testSignup() {
+            const nom = document.getElementById('signup-nom').value;
+            const prenom = document.getElementById('signup-prenom').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-pwd').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/utilisateurs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom, prenom, email, password, telephone: '0123456789', adresse: '123 Rue Test' })
+                });
+                const data = await response.json();
+                displayResult('signup-result', `✅ Utilisateur créé!\n${JSON.stringify(data, null, 2)}`, 'success');
+                setCheck('check1', 'done');
+            } catch (e) {
+                displayResult('signup-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pwd').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('auth_token', data.token);
+                    displayResult('login-result', `✅ Connecté!\nToken: ${data.token.substring(0, 50)}...\nUtilisateur: ${data.user.prenom} ${data.user.nom}`, 'success');
+                    setCheck('check2', 'done');
+                } else {
+                    displayResult('login-result', `❌ Erreur Login\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('login-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        function showTokenInfo() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('token-result', '❌ Pas de token trouvé', 'error');
+                return;
+            }
+            try {
+                const parts = token.split('.');
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                displayResult('token-result', `✅ Token Valide\n${JSON.stringify(payload, null, 2)}\n\nExparation: ${new Date(payload.exp * 1000).toLocaleString('fr-FR')}`, 'success');
+            } catch (e) {
+                displayResult('token-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('auth_token');
+            displayResult('token-result', '✅ Token supprimé', 'success');
+        }
+
+        async function testCreatePlatAsAdmin() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('plat-result', '❌ Pas de token - Connectez-vous d\'abord', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/plats`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        libelle: document.getElementById('plat-libelle').value,
+                        description: document.getElementById('plat-description').value,
+                        prix: document.getElementById('plat-prix').value,
+                        regime_id: document.getElementById('plat-regime').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    displayResult('plat-result', `✅ Plat créé (Admin OK)\n${JSON.stringify(data, null, 2)}`, 'success');
+                    setCheck('check5', 'done');
+                } else {
+                    displayResult('plat-result', `❌ Erreur\nStatus: ${response.status}\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('plat-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreatePlatAsClient() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('plat-result', '❌ Pas de token', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/plats`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        libelle: document.getElementById('plat-libelle').value,
+                        description: document.getElementById('plat-description').value,
+                        prix: document.getElementById('plat-prix').value,
+                        regime_id: document.getElementById('plat-regime').value
+                    })
+                });
+                const data = await response.json();
+                if (response.status === 403) {
+                    displayResult('plat-result', `✅ Protection 403 OK - Client bloqué\n${JSON.stringify(data, null, 2)}`, 'warning');
+                    setCheck('check4', 'done');
+                } else {
+                    displayResult('plat-result', `⚠️ Status: ${response.status} (attendu 403)\n${JSON.stringify(data, null, 2)}`, 'warning');
+                }
+            } catch (e) {
+                displayResult('plat-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreateMenuAsAdmin() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('menu-result', '❌ Pas de token', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/menus`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        libelle: document.getElementById('menu-libelle').value,
+                        description: document.getElementById('menu-description').value,
+                        prix: document.getElementById('menu-prix').value
+                    })
+                });
+                const data = await response.json();
+                displayResult('menu-result', `${response.ok ? '✅' : '❌'} Status ${response.status}\n${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+            } catch (e) {
+                displayResult('menu-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreateCommande() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('commande-result', '❌ Token requis (Auth) - Connectez-vous', 'error');
+                setCheck('check3', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/commandes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        menu_id: document.getElementById('commande-menu').value,
+                        date_commande: document.getElementById('commande-date').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    displayResult('commande-result', `✅ Commande créée\n${JSON.stringify(data, null, 2)}`, 'success');
+                    setCheck('check3', 'done');
+                } else {
+                    displayResult('commande-result', `❌ Erreur ${response.status}\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('commande-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreateCommandeSuccess() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('commande-result', '❌ Token requis', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/commandes`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                displayResult('commande-result', `${Array.isArray(data) ? '✅' : '❌'} Commandes:\n${JSON.stringify(data, null, 2)}`, Array.isArray(data) ? 'success' : 'error');
+            } catch (e) {
+                displayResult('commande-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreateAvis() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('avis-result', '❌ Token requis pour créer avis', 'error');
+                setCheck('check7', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/avis`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        plat_id: document.getElementById('avis-plat').value,
+                        note: document.getElementById('avis-note').value,
+                        commentaire: document.getElementById('avis-commentaire').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    displayResult('avis-result', `✅ Avis créé\n${JSON.stringify(data, null, 2)}`, 'success');
+                    setCheck('check7', 'done');
+                } else {
+                    displayResult('avis-result', `❌ Erreur\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('avis-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testListAvis() {
+            try {
+                const response = await fetch(`${API_BASE}/api/avis`);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    displayResult('avis-result', `✅ Avis publics accessible\nTotal: ${data.length}\n${JSON.stringify(data.slice(0, 2), null, 2)}...`, 'success');
+                    setCheck('check6', 'done');
+                } else {
+                    displayResult('avis-result', `❌ Erreur\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('avis-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

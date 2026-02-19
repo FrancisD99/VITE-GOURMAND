@@ -157,6 +157,11 @@ CREATE TABLE IF NOT EXISTS plat_allergen (
 
 -- Insertion de données de base
 INSERT INTO poste (libelle) VALUES ('admin'), ('cliente'), ('chef');
+
+-- Créer l'utilisateur admin par défaut
+INSERT INTO utilisateur (email, password, nom, prenom, role_id) VALUES 
+('admin@vite-gourmand.test', '$2y$10$gKioYteiz/mGwM5SAx1Ncue2eYtsrpj.PTob6GZ8j18ZTzTh1KL2S', 'Admin', 'System', (SELECT role_id FROM poste WHERE libelle = 'admin'));
+
 INSERT INTO regime (libelle) VALUES ('Classique'), ('Vegan'), ('Végétarien'), ('Sans gluten');
 INSERT INTO theme (libelle) VALUES ('Mariage'), ('Anniversaire'), ('Réunion professionnelle'), ('Soirée privée');
 INSERT INTO allergen (libelle) VALUES ('Arachides'), ('Gluten'), ('Produits laitiers'), ('Oeufs'), ('Noix');

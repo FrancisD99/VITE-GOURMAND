@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test JWT Authentication - Étape 3</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #667eea;
+            font-size: 18px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        button.danger {
+            background: #e74c3c;
+        }
+        button.danger:hover {
+            background: #c0392b;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .progress {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .progress-item::before {
+            content: "⭕";
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .progress-item.done::before {
+            content: "✅";
+        }
+        .progress-item.error::before {
+            content: "❌";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 JWT Authentication Test - Étape 3</h1>
+        
+        <div class="info-box">
+            <strong>ℹ️ Instructions:</strong><br>
+            1. Enregistrez un nouvel utilisateur si vous n'en avez pas<br>
+            2. Connectez-vous pour obtenir un token JWT<br>
+            3. Testez les endpoints protégés avec le token<br>
+            4. Vérifiez le stockage du token dans localStorage
+        </div>
+
+        <!-- Test 1: Signup -->
+        <div class="test-section">
+            <h2>1️⃣ Test Signup (Enregistrement)</h2>
+            <input type="text" id="signup-nom" placeholder="Nom" value="Dupont">
+            <input type="text" id="signup-prenom" placeholder="Prénom" value="Jean">
+            <input type="email" id="signup-email" placeholder="Email" value="jean@test.com">
+            <input type="tel" id="signup-telephone" placeholder="Téléphone" value="0123456789">
+            <input type="text" id="signup-adresse" placeholder="Adresse" value="123 Rue Test">
+            <input type="password" id="signup-password" placeholder="Mot de passe (10+ chars, upper, lower, digit, special)" value="SecurePass123!">
+            <button onclick="testSignup()">Enregistrer</button>
+            <div id="signup-result"></div>
+        </div>
+
+        <!-- Test 2: Login -->
+        <div class="test-section">
+            <h2>2️⃣ Test Login (Connexion)</h2>
+            <input type="email" id="login-email" placeholder="Email" value="jean@test.com">
+            <input type="password" id="login-password" placeholder="Mot de passe" value="SecurePass123!">
+            <button onclick="testLogin()">Connexion</button>
+            <div id="login-result"></div>
+        </div>
+
+        <!-- Test 3: Get Current User -->
+        <div class="test-section">
+            <h2>3️⃣ Test Get Current User (Endpoint protégé)</h2>
+            <button onclick="testGetCurrentUser()">Récupérer Utilisateur Courant</button>
+            <button class="danger" onclick="clearToken()">Effacer Token (Logout)</button>
+            <div id="user-result"></div>
+        </div>
+
+        <!-- Test 4: Token Info -->
+        <div class="test-section">
+            <h2>🔑 Informations Token</h2>
+            <button onclick="displayTokenInfo()">Afficher Token Info</button>
+            <button onclick="displayLocalStorage()">Afficher localStorage</button>
+            <div id="token-result"></div>
+        </div>
+
+        <!-- Progress Tracker -->
+        <div class="test-section">
+            <h2>📊 Progression</h2>
+            <div class="progress" id="progress">
+                <div class="progress-item" id="step1">Enregistrement</div>
+                <div class="progress-item" id="step2">Connexion</div>
+                <div class="progress-item" id="step3">Token Stocké</div>
+                <div class="progress-item" id="step4">Endpoint Protégé Accédé</div>
+            </div>
+        </div>
+
+        <!-- API Response Monitor -->
+        <div class="test-section">
+            <h2>📡 Moniteur API</h2>
+            <div id="api-monitor" class="result info"></div>
+        </div>
+    </div>
+
+    <script>
+        // Base API URL
+        const API_BASE = 'http://localhost:8000';
+
+        // Helper: Display result
+        function displayResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+            logAPICall(message, type);
+        }
+
+        // Helper: Log API calls
+        function logAPICall(message, type) {
+            const monitor = document.getElementById('api-monitor');
+            const time = new Date().toLocaleTimeString('fr-FR');
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            monitor.textContent += `[${time}] ${icon} ${message}\n`;
+            monitor.scrollTop = monitor.scrollHeight;
+        }
+
+        // Helper: Set progress step
+        function setProgress(stepId, state) {
+            const element = document.getElementById(stepId);
+            element.className = `progress-item ${state}`;
+            element.textContent = element.textContent.replace(/^[\w✅❌⭕]+ /, state === 'done' ? '✅ ' : state === 'error' ? '❌ ' : '⭕ ');
+        }
+
+        // Test 1: Signup
+        async function testSignup() {
+            const nom = document.getElementById('signup-nom').value;
+            const prenom = document.getElementById('signup-prenom').value;
+            const email = document.getElementById('signup-email').value;
+            const telephone = document.getElementById('signup-telephone').value;
+            const adresse = document.getElementById('signup-adresse').value;
+            const password = document.getElementById('signup-password').value;
+
+            if (!nom || !prenom || !email || !password) {
+                displayResult('signup-result', 'Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/utilisateurs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nom, prenom, email, telephone, adresse, password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResult('signup-result', `✅ Utilisateur créé!\nID: ${data.utilisateur_id}\nEmail: ${email}`, 'success');
+                    setProgress('step1', 'done');
+                } else {
+                    displayResult('signup-result', `❌ Erreur: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                displayResult('signup-result', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 2: Login
+        async function testLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                displayResult('login-result', 'Veuillez entrer email et mot de passe', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    // Store token
+                    localStorage.setItem('auth_token', data.token);
+                    
+                    displayResult('login-result', 
+                        `✅ Connexion réussie!\n\nUtilisateur: ${data.user.prenom} ${data.user.nom}\nEmail: ${data.user.email}\nToken: ${data.token.substring(0, 50)}...`, 
+                        'success');
+                    
+                    setProgress('step1', 'done');
+                    setProgress('step2', 'done');
+                    checkTokenStorage();
+                } else {
+                    setProgress('step2', 'error');
+                    displayResult('login-result', `❌ Erreur: ${data.error || 'Credentials invalid'}`, 'error');
+                }
+            } catch (error) {
+                setProgress('step2', 'error');
+                displayResult('login-result', `❌ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Test 3: Get Current User
+        async function testGetCurrentUser() {
+            const token = localStorage.getItem('auth_token');
+
+            if (!token) {
+                displayResult('user-result', '❌ Aucun token trouvé. Veuillez d\'abord vous connecter.', 'error');
+                setProgress('step4', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResult('user-result',
+                        `✅ Endpoint protégé accédé avec succès!\n\nID: ${data.utilisateur_id}\nNom: ${data.nom}\nPrénom: ${data.prenom}\nEmail: ${data.email}`,
+                        'success');
+                    setProgress('step4', 'done');
+                } else {
+                    displayResult('user-result', `❌ Erreur: ${data.error || 'Unauthorized'}`, 'error');
+                    setProgress('step4', 'error');
+                }
+            } catch (error) {
+                displayResult('user-result', `❌ Erreur réseau: ${error.message}`, 'error');
+                setProgress('step4', 'error');
+            }
+        }
+
+        // Display token info
+        function displayTokenInfo() {
+            const token = localStorage.getItem('auth_token');
+
+            if (!token) {
+                displayResult('token-result', 'Aucun token trouvé dans le localStorage', 'error');
+                return;
+            }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    displayResult('token-result', '❌ Token invalide - format incorrect', 'error');
+                    return;
+                }
+
+                // Decode header and payload (base64url)
+                const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+                const message = `✅ Token JWT Valide\n\nHEADER:\n${JSON.stringify(header, null, 2)}\n\nPAYLOAD:\n${JSON.stringify(payload, null, 2)}\n\nSIGNATURE: ${parts[2].substring(0, 20)}...\n\nExpiration: ${new Date(payload.exp * 1000).toLocaleString('fr-FR')}`;
+                
+                displayResult('token-result', message, 'success');
+            } catch (error) {
+                displayResult('token-result', `❌ Erreur décodage token: ${error.message}`, 'error');
+            }
+        }
+
+        // Display localStorage
+        function displayLocalStorage() {
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                displayResult('token-result', 'localStorage: auth_token = NOT FOUND', 'error');
+                return;
+            }
+
+            displayResult('token-result', 
+                `✅ localStorage Contents:\n\nauth_token = ${token.substring(0, 100)}...\n\nLongueur: ${token.length} caractères`,
+                'info');
+        }
+
+        // Clear token (logout)
+        function clearToken() {
+            localStorage.removeItem('auth_token');
+            displayResult('user-result', '✅ Token supprimé (Logout)', 'success');
+            setProgress('step3', 'error');
+            setProgress('step4', 'error');
+        }
+
+        // Check token storage
+        function checkTokenStorage() {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                setProgress('step3', 'done');
+            }
+        }
+
+        // Initial check
+        window.addEventListener('load', function() {
+            checkTokenStorage();
+            logAPICall('Test page loaded - Prêt à tester', 'info');
+        });
+    </script>
+</body>
+</html>

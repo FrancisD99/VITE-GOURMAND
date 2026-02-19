@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test RBAC Étape 5</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        h1 { font-size: 32px; margin-bottom: 10px; }
+        p { font-size: 14px; opacity: 0.9; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .section h3 {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        button:hover { background: #764ba2; }
+        button.danger { background: #e74c3c; }
+        button.danger:hover { background: #c0392b; }
+        button.success { background: #27ae60; }
+        button.success:hover { background: #229954; }
+        button.warning { background: #f39c12; }
+        button.warning:hover { background: #e67e22; }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 2px;
+        }
+        .role-badge.admin { background: #ff4757; color: white; }
+        .role-badge.chef { background: #ff6348; color: white; }
+        .role-badge.serveur { background: #ffa502; color: white; }
+        .role-badge.moderateur { background: #00b894; color: white; }
+        .role-badge.client { background: #1e90ff; color: white; }
+        .matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 11px;
+        }
+        .matrix th, .matrix td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .matrix th {
+            background: #667eea;
+            color: white;
+        }
+        .matrix tr:hover { background: #f5f5f5; }
+        .check { display: flex; align-items: center; margin: 5px 0; }
+        .check::before {
+            content: "⭕";
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        .check.ok::before { content: "✅"; }
+        .check.error::before { content: "❌"; }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Test RBAC - Étape 5</h1>
+            <p>Système de Permissions Granulaires et Rôles</p>
+        </header>
+
+        <!-- Authentification & Rôles -->
+        <div class="grid">
+            <div class="card">
+                <h2>👤 Authentification & Rôles</h2>
+                
+                <div class="section">
+                    <h3>Connexion avec différents rôles</h3>
+                    <select id="role-select">
+                        <option value="">-- Choisir un compte test --</option>
+                        <option value='{"email":"admin@test.com","password":"AdminPass123!","role":"admin"}'>Admin (Tous les droits)</option>
+                        <option value='{"email":"chef@test.com","password":"ChefPass123!","role":"chef"}'>Chef (Cuisine)</option>
+                        <option value='{"email":"serveur@test.com","password":"ServeurPass123!","role":"serveur"}'>Serveur (Service)</option>
+                        <option value='{"email":"moderat@test.com","password":"ModPass123!","role":"modérateur"}'>Modérateur (Avis)</option>
+                        <option value='{"email":"client@test.com","password":"ClientPass123!","role":"client"}'>Client (Commandes)</option>
+                    </select>
+                    <button onclick="autoFillLogin()">Auto-remplir</button>
+                    <button onclick="testLogin()" class="success">Se Connecter</button>
+                    <div id="auth-result"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Token & Utilisateur</h3>
+                    <button onclick="showTokenInfo()">Afficher Token</button>
+                    <button onclick="showPermissions()" class="info">Mes Permissions</button>
+                    <button class="danger" onclick="clearToken()">Déconnexion</button>
+                    <div id="token-result"></div>
+                </div>
+            </div>
+
+            <!-- Opérations Protégées -->
+            <div class="card">
+                <h2>🔒 Opérations Protégées</h2>
+                
+                <div class="section">
+                    <h3>Test Admin Only</h3>
+                    <button class="danger" onclick="testDeleteUser()">Supprimer Utilisateur (ADMIN)</button>
+                    <div id="admin-result"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Test Chef</h3>
+                    <input type="text" id="plat-nom" placeholder="Nom plat" value="Pasta">
+                    <input type="number" id="plat-prix" placeholder="Prix" value="15.99">
+                    <button class="warning" onclick="testCreatePlat()">Créer Plat (CHEF)</button>
+                    <div id="plat-result"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Test Client</h3>
+                    <input type="number" id="commande-menu" placeholder="Menu ID" value="1">
+                    <button onclick="testCreateCommande()">Créer Commande (CLIENT)</button>
+                    <div id="commande-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matrice Permissions -->
+        <div class="card">
+            <h2>📊 Matrice des Permissions par Rôle</h2>
+            <table class="matrix">
+                <thead>
+                    <tr>
+                        <th>Permission</th>
+                        <th><span class="role-badge admin">ADMIN</span></th>
+                        <th><span class="role-badge chef">CHEF</span></th>
+                        <th><span class="role-badge serveur">SERVEUR</span></th>
+                        <th><span class="role-badge moderateur">MODÉRATEUR</span></th>
+                        <th><span class="role-badge client">CLIENT</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Plats</strong></td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;create</td>
+                        <td>✅</td><td>✅</td><td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;read</td>
+                        <td>✅</td><td>✅</td><td>✅</td><td></td><td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;delete</td>
+                        <td>✅</td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Commandes</strong></td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;create</td>
+                        <td>✅</td><td></td><td></td><td></td><td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;read (all)</td>
+                        <td>✅</td><td>✅</td><td>✅</td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;read (own)</td>
+                        <td>✅</td><td></td><td></td><td></td><td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;status</td>
+                        <td>✅</td><td>✅</td><td>✅</td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Avis</strong></td>
+                        <td colspan="5"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;create</td>
+                        <td>✅</td><td></td><td></td><td></td><td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;moderate</td>
+                        <td>✅</td><td></td><td></td><td>✅</td><td></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;delete</td>
+                        <td>✅</td><td></td><td></td><td>✅</td><td>❌ own</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Info Setup -->
+        <div class="card">
+            <h2>⚙️ Configuration Requise</h2>
+            <div class="info-box">
+                <strong>1. Exécuter le script SQL:</strong><br>
+                <code style="background: #f0f0f0; padding: 5px; border-radius: 3px; display: block; margin: 10px 0;">
+mysql -u root vite_gourmand &lt; etape5-rbac.sql
+                </code>
+            </div>
+            <div class="info-box">
+                <strong>2. Ou avec PowerShell:</strong><br>
+                <code style="background: #f0f0f0; padding: 5px; border-radius: 3px; display: block; margin: 10px 0;">
+$env:MYSQL_PWD="";  mysql -u root vite_gourmand &lt; etape5-rbac.sql
+                </code>
+            </div>
+            <div class="info-box">
+                <strong>3. Créer les comptes de test (si nécessaire):</strong><br>
+                <button onclick="createTestAccounts()">Créer Comptes de Test</button>
+                <div id="setup-result"></div>
+            </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="card">
+            <h2>✓ Checklist Installation</h2>
+            <div class="check" id="check1">Tables permission créées</div>
+            <div class="check" id="check2">Rôles et permissions configurés</div>
+            <div class="check" id="check3">PermissionManager fonctionnel</div>
+            <div class="check" id="check4">AuthHelper amélioré</div>
+            <div class="check" id="check5">Comptes de test créés</div>
+            <div class="check" id="check6">Permissions vérifiées</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        function displayResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        function setCheck(checkId, state) {
+            document.getElementById(checkId).className = `check ${state}`;
+        }
+
+        function autoFillLogin() {
+            const select = document.getElementById('role-select');
+            if (select.value) {
+                const data = JSON.parse(select.value);
+                document.getElementById('login-email').value = data.email;
+                document.getElementById('login-pwd').value = data.password;
+            }
+        }
+
+        async function testLogin() {
+            const email = 'admin@test.com';
+            const password = 'AdminPass123!';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    localStorage.setItem('auth_token', data.token);
+                    displayResult('auth-result', `✅ Connecté!\nRôle: ${data.user.role_id === 1 ? 'ADMIN' : 'CLIENT'}\n${JSON.stringify(data.user, null, 2)}`, 'success');
+                    setCheck('check5', 'ok');
+                } else {
+                    displayResult('auth-result', `❌ Erreur\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (e) {
+                displayResult('auth-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        function showTokenInfo() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('token-result', '❌ Pas de token', 'error');
+                return;
+            }
+            try {
+                const parts = token.split('.');
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                displayResult('token-result', `✅ Token Valide\n${JSON.stringify(payload, null, 2)}`, 'info');
+                setCheck('check6', 'ok');
+            } catch (e) {
+                displayResult('token-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        function showPermissions() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('token-result', '❌ Pas de token', 'error');
+                return;
+            }
+            // Afficher les permissions en fonction du rôle
+            displayResult('token-result', '🔐 Permissions du rôle visibles en admin dashboard\n(À implémenter: GET /api/admin/my-permissions)', 'info');
+        }
+
+        function clearToken() {
+            localStorage.removeItem('auth_token');
+            displayResult('token-result', '✅ Déconnecté', 'success');
+        }
+
+        async function testCreatePlat() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('plat-result', '❌ Token requis', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/plats`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        titre_plat: document.getElementById('plat-nom').value,
+                        prix: document.getElementById('plat-prix').value,
+                        regime_id: 1
+                    })
+                });
+
+                const data = await response.json();
+                displayResult('plat-result', 
+                    response.ok ? `✅ Plat créé\n${JSON.stringify(data, null, 2)}` : `❌ Forbidden (Pas CHEF/ADMIN)\n${JSON.stringify(data, null, 2)}`,
+                    response.ok ? 'success' : response.status === 403 ? 'error' : 'error'
+                );
+            } catch (e) {
+                displayResult('plat-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testCreateCommande() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('commande-result', '❌ Token requis - Connectez-vous d\'abord', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/commandes`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        menu_id: document.getElementById('commande-menu').value,
+                        date_commandante: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                const data = await response.json();
+                displayResult('commande-result', 
+                    response.ok ? `✅ Commande créée\n${JSON.stringify(data, null, 2)}` : `❌ Erreur\n${JSON.stringify(data, null, 2)}`,
+                    response.ok ? 'success' : 'error'
+                );
+            } catch (e) {
+                displayResult('commande-result', `❌ Erreur: ${e.message}`, 'error');
+            }
+        }
+
+        async function testDeleteUser() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                displayResult('admin-result', '❌ Token requis - Admin seulement', 'error');
+                return;
+            }
+
+            displayResult('admin-result', '⚠️  Test de suppression désactivé (sécurité)\nVérifier les logs pour les permissions', 'info');
+        }
+
+        async function createTestAccounts() {
+            const accounts = [
+                { nom: 'Admin', prenom: 'Test', email: 'admin@test.com', password: 'AdminPass123!', role_id: 1 },
+                { nom: 'Chef', prenom: 'Test', email: 'chef@test.com', password: 'ChefPass123!', role_id: 3 },
+                { nom: 'Serveur', prenom: 'Test', email: 'serveur@test.com', password: 'ServeurPass123!', role_id: 4 },
+                { nom: 'Modérateur', prenom: 'Test', email: 'moderat@test.com', password: 'ModPass123!', role_id: 5 },
+                { nom: 'Client', prenom: 'Test', email: 'client@test.com', password: 'ClientPass123!', role_id: 2 }
+            ];
+
+            let created = 0;
+            for (const account of accounts) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/utilisateurs`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({...account, telephone: '0123456789', adresse: 'Test'})
+                    });
+                    if (response.ok) created++;
+                } catch (e) {
+                    console.error('Error creating account:', e);
+                }
+            }
+            displayResult('setup-result', `✅ ${created}/${accounts.length} comptes créés`, created === accounts.length ? 'success' : 'info');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test RBAC - Vite & Gourmand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h2 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .user-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: left;
+        }
+        
+        .user-btn:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        
+        .user-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            font-size: 10px;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-top: 5px;
+            color: #666;
+        }
+        
+        .user-btn.active .role-badge {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+        
+        .main {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+        }
+        
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .test-btn {
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .test-btn:hover {
+            background: #e9ecef;
+            border-color: #999;
+        }
+        
+        .test-btn.success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .test-btn.error { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .test-btn.pending { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        
+        .results {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .result-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .result-item.success {
+            border-left-color: #28a745;
+            background: #f1f9f6;
+        }
+        
+        .result-item.error {
+            border-left-color: #dc3545;
+            background: #fdf5f6;
+        }
+        
+        .result-item.warning {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .result-endpoint {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .result-message {
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .permissions-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        
+        .permissions-list h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .permission-item {
+            display: inline-block;
+            background: white;
+            padding: 5px 10px;
+            margin: 5px 5px 5px 0;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test RBAC - Contrôle d'accès granulaire</h1>
+        
+        <div class="layout">
+            <div class="sidebar">
+                <h2>Utilisateurs</h2>
+                <button class="user-btn active" data-user="admin">
+                    👨‍💼 Admin
+                    <div class="role-badge">Administrateur</div>
+                </button>
+                <button class="user-btn" data-user="client">
+                    👤 Client
+                    <div class="role-badge">Cliente</div>
+                </button>
+                <button class="user-btn" data-user="chef">
+                    👨‍🍳 Chef
+                    <div class="role-badge">Cuisine</div>
+                </button>
+                <button class="user-btn" data-user="serveur">
+                    🧑‍✈️ Serveur
+                    <div class="role-badge">Service</div>
+                </button>
+                <button class="user-btn" data-user="moderateur">
+                    👮 Modérateur
+                    <div class="role-badge">Modération</div>
+                </button>
+            </div>
+            
+            <div class="main">
+                <div class="permissions-list" id="permissionsDisplay"></div>
+                
+                <div class="test-section">
+                    <h3>📋 Endpoints Utilisateurs</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/utilisateurs')">GET /utilisateurs</button>
+                        <button class="test-btn" onclick="testEndpoint('PUT', '/utilisateurs/2')">PUT /utilisateurs/2</button>
+                        <button class="test-btn" onclick="testEndpoint('DELETE', '/utilisateurs/3')">DELETE /utilisateurs/3</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>🍽️ Endpoints Plats</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/plats')">GET /plats</button>
+                        <button class="test-btn" onclick="testEndpoint('POST', '/plats', {titre_plat: 'Test', prix: 15})">POST /plats</button>
+                        <button class="test-btn" onclick="testEndpoint('PUT', '/plats/1', {titre_plat: 'Modified'})">PUT /plats/1</button>
+                        <button class="test-btn" onclick="testEndpoint('DELETE', '/plats/1')">DELETE /plats/1</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>📑 Endpoints Menus</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/menus')">GET /menus</button>
+                        <button class="test-btn" onclick="testEndpoint('POST', '/menus', {titre: 'Test', nombre_personne_minimum: 2, prix_par_personne: 25})">POST /menus</button>
+                        <button class="test-btn" onclick="testEndpoint('PUT', '/menus/1')">PUT /menus/1</button>
+                        <button class="test-btn" onclick="testEndpoint('DELETE', '/menus/1')">DELETE /menus/1</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>🛒 Endpoints Commandes</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/commandes')">GET /commandes</button>
+                        <button class="test-btn" onclick="testEndpoint('POST', '/commandes', {date_commandante: '2026-02-20', date_livraison: '2026-02-21', heure_livraison: '18:00', prix_menu: 50, nombre_personnes: 2})">POST /commandes</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>💬 Endpoints Avis</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/avis')">GET /avis</button>
+                        <button class="test-btn" onclick="testEndpoint('POST', '/avis', {titre: 'Test', description: 'Test avis', note: 5})">POST /avis</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>📨 Endpoints Contact</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/contact')">GET /contact (Admin)</button>
+                        <button class="test-btn" onclick="testEndpoint('DELETE', '/contact/1')">DELETE /contact/1</button>
+                    </div>
+                </div>
+                
+                <div class="test-section">
+                    <h3>📊 Endpoints Audit</h3>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testEndpoint('GET', '/audit-logs')">GET /audit-logs</button>
+                    </div>
+                </div>
+                
+                <div class="results" id="results">
+                    <h3>Résultats</h3>
+                    <p style="color: #999; font-size: 13px;">Les résultats de test apparaîtront ici...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        
+        const users = {
+            admin: {
+                email: 'admin@vite-gourmand.test',
+                password: 'Admin123',
+                name: 'Admin',
+                token: null
+            },
+            client: {
+                email: 'client@test.fr',
+                password: 'Client123',
+                name: 'Client',
+                token: null
+            },
+            chef: {
+                email: 'chef@test.fr',
+                password: 'Chef123',
+                name: 'Chef',
+                token: null
+            },
+            serveur: {
+                email: 'serveur@test.fr',
+                password: 'Serveur123',
+                name: 'Serveur',
+                token: null
+            },
+            moderateur: {
+                email: 'moderateur@test.fr',
+                password: 'Mod123',
+                name: 'Modérateur',
+                token: null
+            }
+        };
+        
+        let currentUser = 'admin';
+        let testResults = [];
+        
+        async function login(userKey) {
+            const user = users[userKey];
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: user.email,
+                        password: user.password
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.token) {
+                    user.token = data.token;
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.error('Erreur login:', e);
+                return false;
+            }
+        }
+        
+        async function getPermissions(userKey) {
+            const user = users[userKey];
+            if (!user.token) return [];
+            
+            try {
+                // Décoder le JWT pour extraire les permissions
+                const parts = user.token.split('.');
+                if (parts.length !== 3) return [];
+                
+                const payload = JSON.parse(atob(parts[1]));
+                return payload.permissions || [];
+            } catch (e) {
+                return [];
+            }
+        }
+        
+        async function testEndpoint(method, endpoint, data = null) {
+            const user = users[currentUser];
+            
+            if (!user.token) {
+                const loggedIn = await login(currentUser);
+                if (!loggedIn) {
+                    addResult('error', `${method} ${endpoint}`, 'Impossible de se connecter');
+                    return;
+                }
+            }
+            
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                    }
+                };
+                
+                if (data && ['POST', 'PUT'].includes(method)) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_URL}${endpoint}`, options);
+                const responseData = await response.json();
+                
+                if (response.ok || response.status === 201) {
+                    addResult('success', `${method} ${endpoint}`, 
+                        `Status ${response.status} - ${JSON.stringify(responseData).substring(0, 50)}...`);
+                } else if (response.status === 403) {
+                    addResult('error', `${method} ${endpoint}`, 
+                        'Permission refusée (403)');
+                } else {
+                    addResult('error', `${method} ${endpoint}`, 
+                        `Status ${response.status} - ${responseData.error || responseData.message || 'Erreur'}`);
+                }
+            } catch (e) {
+                addResult('error', `${method} ${endpoint}`, `Erreur: ${e.message}`);
+            }
+        }
+        
+        function addResult(type, endpoint, message) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (resultsDiv.innerHTML.includes('Les résultats')) {
+                resultsDiv.innerHTML = '<h3>Résultats</h3>';
+            }
+            
+            const item = document.createElement('div');
+            item.className = `result-item ${type}`;
+            item.innerHTML = `
+                <div class="result-endpoint">${endpoint}</div>
+                <div class="result-message">${message}</div>
+            `;
+            resultsDiv.appendChild(item);
+        }
+        
+        async function switchUser(userKey) {
+            currentUser = userKey;
+            
+            document.querySelectorAll('.user-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.user-btn').classList.add('active');
+            
+            // Nettoyer les résultats
+            document.getElementById('results').innerHTML = '<h3>Résultats</h3><p style="color: #999; font-size: 13px;">Les résultats de test apparaîtront ici...</p>';
+            testResults = [];
+            
+            // Afficher les permissions
+            await updatePermissionsDisplay();
+        }
+        
+        async function updatePermissionsDisplay() {
+            const user = users[currentUser];
+            if (!user.token) {
+                const loggedIn = await login(currentUser);
+            }
+            
+            const permissions = await getPermissions(currentUser);
+            const div = document.getElementById('permissionsDisplay');
+            
+            if (permissions && permissions.length > 0) {
+                let html = `<h4>Permissions de ${user.name}:</h4>`;
+                permissions.forEach(perm => {
+                    html += `<span class="permission-item">${perm}</span>`;
+                });
+                div.innerHTML = html;
+            } else {
+                div.innerHTML = '<p style="color: #999; font-size: 12px;">Connectez-vous pour voir les permissions...</p>';
+            }
+        }
+        
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (!e.target.closest('.user-btn').classList.contains('active')) {
+                    switchUser(btn.dataset.user);
+                }
+            });
+        });
+        
+        // Initialiser
+        (async () => {
+            await updatePermissionsDisplay();
+        })();
+    </script>
+</body>
+</html>

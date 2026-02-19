@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Étape 2 - Plats & Allergènes</title>
+    <style>
+        body { font-family: Arial; max-width: 1000px; margin: 50px auto; }
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #FCD34D; border: none; cursor: pointer; margin: 5px 0; }
+        .response { margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        h2 { border-bottom: 2px solid #FCD34D; padding-bottom: 10px; }
+        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+        .item { padding: 10px; background: white; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Test API Étape 2 - Plats & Allergènes 🍽️</h1>
+
+    <div class="container">
+        <!-- PLATS -->
+        <div>
+            <h2>Gestion des Plats</h2>
+            
+            <h3>Créer un plat</h3>
+            <div class="form-group">
+                <label>Titre:</label>
+                <input type="text" id="plat-titre" value="Pizza Margherita">
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea id="plat-description">Pizza traditionnelle avec tomate, mozzarella et basilic</textarea>
+            </div>
+            <div class="form-group">
+                <label>Prix:</label>
+                <input type="number" id="plat-prix" value="14.99" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>Régime (ID):</label>
+                <input type="number" id="plat-regime" value="1">
+            </div>
+            <button onclick="createPlat()">Créer un plat</button>
+
+            <h3>Récupérer les plats</h3>
+            <button onclick="getAllPlats()">Tous les plats</button>
+            <button onclick="getPlatsByRegime()">Plats par régime (ID=1)</button>
+            <button onclick="searchPlats()">Chercher "pizza"</button>
+
+            <div id="plats-list" class="grid-list"></div>
+        </div>
+
+        <!-- ALLERGENES -->
+        <div>
+            <h2>Gestion des Allergènes</h2>
+            
+            <h3>Créer un allergène</h3>
+            <div class="form-group">
+                <label>Libellé:</label>
+                <input type="text" id="allergen-label" value="Arachides">
+            </div>
+            <button onclick="createAllergene()">Créer un allergène</button>
+
+            <h3>Récupérer les allergènes</h3>
+            <button onclick="getAllAllergenes()">Tous les allergènes</button>
+
+            <div id="allergenes-list" class="grid-list"></div>
+        </div>
+    </div>
+
+    <h2 style="grid-column: 1/-1;">Réponse API</h2>
+    <div class="response" id="response">En attente...</div>
+
+    <script type="module">
+        import {
+            getAllPlats, getPlatsByRegime, searchPlats, createPlat,
+            getAllAllergenes, createAllergene
+        } from 'http://localhost:3000/api-client.js';
+
+        // Plats
+        window.createPlat = async () => {
+            const data = {
+                titre_plat: document.getElementById('plat-titre').value,
+                description: document.getElementById('plat-description').value,
+                prix: parseFloat(document.getElementById('plat-prix').value),
+                regime_id: parseInt(document.getElementById('plat-regime').value) || null
+            };
+            
+            try {
+                const result = await createPlat(data);
+                document.getElementById('response').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+
+        window.getAllPlats = async () => {
+            try {
+                const plats = await getAllPlats();
+                document.getElementById('response').textContent = JSON.stringify(plats, null, 2);
+                
+                const list = document.getElementById('plats-list');
+                list.innerHTML = plats.length > 0 ? plats.map(p => `
+                    <div class="item">
+                        <strong>${p.titre_plat}</strong><br>
+                        Prix: ${p.prix}€<br>
+                        <small>${p.description || ''}</small>
+                    </div>
+                `).join('') : '<p>Aucun plat</p>';
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+
+        window.getPlatsByRegime = async () => {
+            try {
+                const plats = await getPlatsByRegime(1);
+                document.getElementById('response').textContent = JSON.stringify(plats, null, 2);
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+
+        window.searchPlats = async () => {
+            try {
+                const plats = await searchPlats('pizza');
+                document.getElementById('response').textContent = JSON.stringify(plats, null, 2);
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+
+        // Allergènes
+        window.createAllergene = async () => {
+            const data = {
+                libelle: document.getElementById('allergen-label').value
+            };
+            
+            try {
+                const result = await createAllergene(data);
+                document.getElementById('response').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+
+        window.getAllAllergenes = async () => {
+            try {
+                const allergenes = await getAllAllergenes();
+                document.getElementById('response').textContent = JSON.stringify(allergenes, null, 2);
+                
+                const list = document.getElementById('allergenes-list');
+                list.innerHTML = allergenes.length > 0 ? allergenes.map(a => `
+                    <div class="item">
+                        <strong>${a.libelle}</strong><br>
+                        ID: ${a.allergen_id}
+                    </div>
+                `).join('') : '<p>Aucun allergène</p>';
+            } catch (error) {
+                document.getElementById('response').textContent = 'Erreur: ' + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
