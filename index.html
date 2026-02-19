@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite & Gourmand - Restaurant Gourmet</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🍽️</span>
+                <span>Vite & Gourmand</span>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#accueil">Accueil</a></li>
+                <li><a href="#apropos">À propos</a></li>
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="login.html" class="btn-connexion">Connexion</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero">
+        <div class="hero-content">
+            <h1>Vite & Gourmand</h1>
+            <p>Savourer l'instant, goûter l'excellence</p>
+            <button class="btn-primary" onclick="document.getElementById('menu').scrollIntoView({behavior: 'smooth'})">DÉCOUVRIR NOS MENU</button>
+        </div>
+    </section>
+
+    <!-- À Propos Section -->
+    <section id="apropos" class="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-image">
+                    <div class="placeholder-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Image du restaurant</span>
+                    </div>
+                </div>
+                <div class="about-content">
+                    <h2>À propos de nous</h2>
+                    <p>Nous sublimes vos événements grâce à une cuisine inspirée du terroir, revisitée avec créativité et finesse. Chaque réception devient une expérience gastronomique unique, pensée pour marquer les esprits.</p>
+                    
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-number">1</div>
+                            <h3>Équipe qualifiée</h3>
+                            <p>Nos chefs et notre équipe de service possèdent plusieurs années d'expérience dans l'événementiel haut de gamme</p>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-number">2</div>
+                            <h3>Produits frais et locaux</h3>
+                            <p>Partenariat exclusifs avec des producteurs de la région pour garantir fraîcheur et qualité exceptionnelle</p>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-number">3</div>
+                            <h3>Fait maison</h3>
+                            <p>We're your cafe and barista in one, serving your favorite sipping by sun-up, and your cocktail-of-choice by sundown.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Professionnalisme Section -->
+    <section class="professionalism">
+        <div class="container">
+            <h2>Un professionnalisme reconnu</h2>
+            <p>La fidélité de nos clients réguliers reflète notre engagement constant envers l'excellence. Sans publicité traditionnelle, notre réputation s'est construire grâce aux recommandation et à la satisfaction durable de nos partenaires.</p>
+        </div>
+    </section>
+
+    <!-- Communauté Section -->
+    <section class="community">
+        <div class="container">
+            <h2>Notre Communauté</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Mara</span>
+                    </div>
+                    <h3>Mara, regular since 2015</h3>
+                    <p>Food is a huge part of my life. The staff feels like family, and they know just how I like my coffee - and my gourmet burger!</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Brock</span>
+                    </div>
+                    <h3>Brock, new in town</h3>
+                    <p>I stumbled upon Foodie when I was exploring my new neighborhood. The staff was so friendly, even the food was as delish!</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Steffi</span>
+                    </div>
+                    <h3>Steffi, lives around the corner</h3>
+                    <p>So glad to have a neighborhood cafe, hangout spot, and bar all in one. Comfort food in a comforting atmosphere- need I say more?</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <h2>Au Menu</h2>
+            
+            <div class="menu-filters">
+                <h3>Type de menu</h3>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="all">Tous les régimes</button>
+                    <button class="filter-btn" data-filter="classic">Classique</button>
+                    <button class="filter-btn" data-filter="vegan">Vegan</button>
+                    <button class="filter-btn" data-filter="vegetarian">Végétarien</button>
+                </div>
+            </div>
+
+            <div class="menu-items-grid">
+                <div class="menu-item" data-category="all classic">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Gourmet Burgers</span>
+                    </div>
+                    <h3>Gourmet Burgers</h3>
+                    <p>Packed with flavor and cooked to perfection</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all classic">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Chicken Wings</span>
+                    </div>
+                    <h3>Chicken Wings</h3>
+                    <p>Paired with dipping sauces that are too good to pass up</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Thirst Quenchers</span>
+                    </div>
+                    <h3>Thirst Quenchers</h3>
+                    <p>Choose from classic blends and unique concoctions</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all vegetarian">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Salad Wraps</span>
+                    </div>
+                    <h3>Salad Wraps</h3>
+                    <p>A healthy, flavorful choice, wrapped in freshness</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all vegetarian vegan">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Pasta Classics</span>
+                    </div>
+                    <h3>Pasta Classics</h3>
+                    <p>Bold flavors meet perfectly al dente pasta</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all classic">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Pizza Bestsellers</span>
+                    </div>
+                    <h3>Pizza Bestsellers</h3>
+                    <p>Big on flavor with that perfect cheesy, crunchy crust</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+                <div class="menu-item" data-category="all vegetarian vegan">
+                    <div class="menu-image" style="background: linear-gradient(135deg, #FCD34D, #F59E0B);">
+                        <span>Desserts</span>
+                    </div>
+                    <h3>Desserts</h3>
+                    <p>Pick from old-school treats and fun new flavors</p>
+                    <a href="#" class="detail-link">Détail</a>
+                </div>
+            </div>
+
+            <button class="btn-primary btn-order">COMMANDER</button>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2>Contactez-nous</h2>
+            <div class="contact-grid">
+                <div class="contact-form">
+                    <h3>Contact Form</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Email address*</label>
+                            <input type="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Titre</label>
+                            <input type="text">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">Envoyé</button>
+                    </form>
+                </div>
+                <div class="contact-map">
+                    <div class="placeholder-map">
+                        <span>📍 Paris, France</span>
+                        <p>123 Anywhere St., Any City</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Vite & Gourmand</h3>
+                    <p>123 Anywhere St., Any City, State, Country 12345</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Horaires</h3>
+                    <p>Lun-ven 09h-18h00</p>
+                    <p>Sam 10h00-16h00</p>
+                    <p>Dimanche : Fermé</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Email Address</h3>
+                    <p>hello@reallyreatsite.com</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Phone Number</h3>
+                    <p>(123) 456 7890</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="#contact">Contact</a>
+                    <a href="#apropos">Accueil</a>
+                    <a href="#menu">Mentions légales</a>
+                    <a href="#menu">CGV</a>
+                </div>
+                <p>&copy; 2026 Vite & Gourmand. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
