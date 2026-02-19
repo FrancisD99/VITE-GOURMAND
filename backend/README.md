@@ -40,7 +40,22 @@ mysql -u root -p < backend/database.sql
 
 Ou copiez le contenu de `database.sql` dans phpMyAdmin.
 
-### 3. Configuration du serveur
+### 3. Configuration JWT
+
+⚠️ **IMPORTANT**: Changez la clé secrète JWT!
+
+Modifiez `backend/config/JWTHandler.php`:
+
+```php
+private $secret = 'your-secret-key-change-this'; // ← CHANGEZ CETTE CLÉ!
+```
+
+Générez une clé sécurisée:
+```bash
+openssl rand -base64 32
+```
+
+### 4. Configuration du serveur
 
 Le backend peut fonctionner avec un serveur PHP intégré:
 
@@ -50,6 +65,43 @@ php -S localhost:8000
 ```
 
 ## API Endpoints
+
+### Authentification
+
+```
+POST   /api/auth/login                # Connexion (retourne JWT)
+GET    /api/auth/me                   # Récupérer l'utilisateur connecté
+POST   /api/auth/logout               # Déconnexion
+```
+
+**Exemple Login (POST):**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Réponse Login:**
+```json
+{
+  "message": "Authentification réussie",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "utilisateur_id": 1,
+    "email": "user@example.com",
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "role_id": 2,
+    "role_name": "cliente"
+  }
+}
+```
+
+**Utiliser le token:**
+```bash
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
 ### Utilisateurs
 
@@ -159,6 +211,45 @@ DELETE /api/contact/:id              # Supprimer un message
   "email": "client@example.com",
   "titre": "Question sur les services",
   "message": "Proposez-vous un service de..."
+}
+```
+
+### Plats
+
+```
+POST   /api/plats                    # Créer un plat
+GET    /api/plats                    # Lister tous les plats
+GET    /api/plats?regime_id=1        # Filtrer par régime
+GET    /api/plats?search=pizza        # Rechercher un plat
+GET    /api/plats/:id                # Récupérer un plat (avec allergènes)
+PUT    /api/plats/:id                # Mettre à jour un plat
+DELETE /api/plats/:id                # Supprimer un plat
+```
+
+**Exemple (POST):**
+```json
+{
+  "titre_plat": "Pizza Margherita",
+  "description": "Pizza traditionnelle avec tomate, mozzarella et basilic",
+  "prix": 14.99,
+  "regime_id": 2
+}
+```
+
+### Allergènes
+
+```
+POST   /api/allergenes               # Créer un allergène
+GET    /api/allergenes               # Lister tous les allergènes
+GET    /api/allergenes/:id           # Récupérer un allergène
+PUT    /api/allergenes/:id           # Mettre à jour un allergène
+DELETE /api/allergenes/:id           # Supprimer un allergène
+```
+
+**Exemple (POST):**
+```json
+{
+  "libelle": "Arachides"
 }
 ```
 

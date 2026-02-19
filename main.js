@@ -1,4 +1,4 @@
-import { sendContact, createUser } from './api-client.js';
+import { sendContact, createUser, login } from './api-client.js';
 import { validators } from './validators.js';
 
 // Hamburger Menu
@@ -82,13 +82,34 @@ if (contactForm) {
 }
 
 if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = loginForm.querySelector('input[type="email"]').value;
         
-        // TODO: Implémenter l'authentification avec l'API
-        alert(`Bienvenue! Vous êtes connecté avec: ${email}`);
-        loginForm.reset();
+        const email = document.getElementById('login-email')?.value || '';
+        const password = document.getElementById('login-password')?.value || '';
+        const messageEl = document.getElementById('login-message');
+
+        if (!email || !password) {
+            if (messageEl) messageEl.textContent = '✗ Email et mot de passe requis!';
+            return;
+        }
+
+        try {
+            const response = await login(email, password);
+            
+            if (response.token) {
+                if (messageEl) messageEl.textContent = `✓ Bienvenue ${response.user.prenom}!`;
+                // Rediriger après 1 seconde
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                loginForm.reset();
+            } else if (response.error) {
+                if (messageEl) messageEl.textContent = '✗ ' + response.error;
+            }
+        } catch (error) {
+            if (messageEl) messageEl.textContent = '✗ Erreur: ' + error.message;
+        }
     });
 }
 

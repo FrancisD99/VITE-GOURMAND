@@ -127,4 +127,14 @@ class Utilisateur
         }
         return false;
     }
+
+    public function getByToken($token)
+    {
+        // Cette méthode récupère un utilisateur basé sur les données du token
+        // Le token contient déjà l'ID utilisateur
+        if (isset($token['utilisateur_id'])) {
+            return $this->getById($token['utilisateur_id']);
+        }
+        return false;
+    }
 }

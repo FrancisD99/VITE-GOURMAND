@@ -3,6 +3,91 @@
 
 const API_URL = 'http://localhost:8000/api';
 
+// Stockage du token
+let authToken = localStorage.getItem('auth_token');
+
+export function setAuthToken(token) {
+    authToken = token;
+    localStorage.setItem('auth_token', token);
+}
+
+export function getAuthToken() {
+    return authToken;
+}
+
+export function clearAuthToken() {
+    authToken = null;
+    localStorage.removeItem('auth_token');
+}
+
+function getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    return headers;
+}
+
+// ===== AUTHENTIFICATION =====
+
+export async function login(email, password) {
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const result = await response.json();
+        
+        if (result.token) {
+            setAuthToken(result.token);
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        
+        clearAuthToken();
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function getCurrentUser() {
+    try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            clearAuthToken();
+            throw new Error('Unauthorized');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export function isAuthenticated() {
+    return authToken !== null;
+}
+
 // ===== UTILISATEURS =====
 
 export async function createUser(userData) {
@@ -212,6 +297,152 @@ export async function sendContact(contactData) {
 export async function getAllMessages() {
     try {
         const response = await fetch(`${API_URL}/contact`);
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+// ===== PLATS =====
+
+export async function getAllPlats() {
+    try {
+        const response = await fetch(`${API_URL}/plats`);
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function getPlatById(id) {
+    try {
+        const response = await fetch(`${API_URL}/plats/${id}`);
+        if (!response.ok) throw new Error('Plat non trouvé');
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function getPlatsByRegime(regime_id) {
+    try {
+        const response = await fetch(`${API_URL}/plats?regime_id=${regime_id}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function searchPlats(searchTerm) {
+    try {
+        const response = await fetch(`${API_URL}/plats?search=${encodeURIComponent(searchTerm)}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function createPlat(platData) {
+    try {
+        const response = await fetch(`${API_URL}/plats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(platData)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function updatePlat(id, platData) {
+    try {
+        const response = await fetch(`${API_URL}/plats/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(platData)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function deletePlat(id) {
+    try {
+        const response = await fetch(`${API_URL}/plats/${id}`, {
+            method: 'DELETE'
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+// ===== ALLERGENES =====
+
+export async function getAllAllergenes() {
+    try {
+        const response = await fetch(`${API_URL}/allergenes`);
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function getAllergeneById(id) {
+    try {
+        const response = await fetch(`${API_URL}/allergenes/${id}`);
+        if (!response.ok) throw new Error('Allergène non trouvé');
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function createAllergene(allergeneData) {
+    try {
+        const response = await fetch(`${API_URL}/allergenes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(allergeneData)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function updateAllergene(id, allergeneData) {
+    try {
+        const response = await fetch(`${API_URL}/allergenes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(allergeneData)
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Erreur:', error);
+        throw error;
+    }
+}
+
+export async function deleteAllergene(id) {
+    try {
+        const response = await fetch(`${API_URL}/allergenes/${id}`, {
+            method: 'DELETE'
+        });
         return await response.json();
     } catch (error) {
         console.error('Erreur:', error);
