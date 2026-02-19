@@ -1,3 +1,6 @@
+import { sendContact, createUser } from './api-client.js';
+import { validators } from './validators.js';
+
 // Hamburger Menu
 const hamburger = document.getElementById('hamburger');
 const navMenu = document.getElementById('navMenu');
@@ -52,10 +55,29 @@ const loginForm = document.querySelector('.login-form');
 const signupForm = document.querySelector('.signup-form');
 
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        alert('Merci pour votre message! Nous vous recontacterons bientôt.');
-        contactForm.reset();
+        
+        const email = contactForm.querySelector('input[type="email"]').value;
+        const titre = contactForm.querySelector('input[type="text"]').value;
+        const message = contactForm.querySelector('textarea').value;
+        
+        try {
+            const response = await sendContact({
+                email,
+                titre,
+                message
+            });
+            
+            if (response.message) {
+                alert('✓ Merci pour votre message! Nous vous recontacterons bientôt.');
+                contactForm.reset();
+            } else if (response.error) {
+                alert('✗ Erreur: ' + response.error);
+            }
+        } catch (error) {
+            alert('✗ Erreur lors de l\'envoi: ' + error.message);
+        }
     });
 }
 
@@ -63,17 +85,66 @@ if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const email = loginForm.querySelector('input[type="email"]').value;
+        
+        // TODO: Implémenter l'authentification avec l'API
         alert(`Bienvenue! Vous êtes connecté avec: ${email}`);
         loginForm.reset();
     });
 }
 
 if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
+    signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = signupForm.querySelector('input[type="text"]').value;
-        alert(`Merci de votre inscription, ${name}! Vérifié votre email pour confirmer votre compte.`);
-        signupForm.reset();
+        
+        const nom = document.getElementById('signup-nom')?.value || '';
+        const prenom = document.getElementById('signup-prenom')?.value || '';
+        const email = document.getElementById('signup-email')?.value || '';
+        const password = document.getElementById('signup-password')?.value || '';
+        const passwordConfirm = document.getElementById('signup-password-confirm')?.value || '';
+        const telephone = document.getElementById('signup-telephone')?.value || '';
+        const adresse = document.getElementById('signup-adresse')?.value || '';
+
+        // Validation des champs obligatoires
+        if (!nom || !prenom || !email || !password) {
+            alert('✗ Veuillez remplir tous les champs requis!');
+            return;
+        }
+
+        // Validation de la correspondance des mots de passe
+        if (password !== passwordConfirm) {
+            alert('✗ Les mots de passe ne correspondent pas!');
+            return;
+        }
+
+        // Validation stricte du mot de passe
+        const passwordValidation = validators.validatePassword(password);
+        if (!passwordValidation.isValid) {
+            const errorsList = passwordValidation.errors.map(err => '• ' + err).join('\n');
+            alert(`✗ Mot de passe non sécurisé:\n\n${errorsList}\n\n${validators.getPasswordRequirements()}`);
+            return;
+        }
+
+        try {
+            const response = await createUser({
+                email,
+                password,
+                nom,
+                prenom,
+                telephone: telephone || null,
+                ville: '',
+                pays: 'France',
+                adresse_postale: adresse || ''
+            });
+            
+            if (response.message) {
+                alert(`✓ Inscription réussie! Vérifiez votre email pour confirmer votre compte.`);
+                signupForm.reset();
+            } else if (response.error) {
+                alert('✗ Erreur: ' + response.error);
+            }
+        } catch (error) {
+            alert('✗ Erreur lors de l\'inscription: ' + error.message);
+        }
     });
 }
 
