@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Chef - Vite & Gourmand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: #c0392b;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #a93226;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+            background: #922b21;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover {
+            color: #2c3e50;
+        }
+        
+        .nav-tab.active {
+            color: #c0392b;
+            border-bottom-color: #c0392b;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .order-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .order-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #c0392b;
+            border-radius: 4px;
+        }
+        
+        .order-item h3 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .order-item .details {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-ready {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .btn {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #a93226;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👨‍🍳 Dashboard Chef</h1>
+        <div class="header-actions">
+            <span class="user-badge" id="userBadge">Chef</span>
+            <button class="logout-btn" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('orders')">📋 Commandes à Préparer</button>
+            <button class="nav-tab" onclick="switchTab('menus')">🍽️ Menus</button>
+            <button class="nav-tab" onclick="switchTab('plats')">🍴 Plats</button>
+        </div>
+        
+        <!-- COMMANDES -->
+        <div id="orders" class="page active">
+            <div class="card">
+                <h2>📋 Commandes à Préparer</h2>
+                <div class="order-list" id="ordersList">
+                    <p style="color: #999; text-align: center;">Chargement des commandes...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MENUS -->
+        <div id="menus" class="page">
+            <div class="card">
+                <h2>🍽️ Menus Disponibles</h2>
+                <table class="table" id="menusTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titre</th>
+                            <th>Thème</th>
+                            <th>Prix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align: center; color: #999;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- PLATS -->
+        <div id="plats" class="page">
+            <div class="card">
+                <h2>🍴 Plats Disponibles</h2>
+                <table class="table" id="platsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titre</th>
+                            <th>Description</th>
+                            <th>Prix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" style="text-align: center; color: #999;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = '/api';
+        let authToken = sessionStorage.getItem('vite_gourmand_token') || localStorage.getItem('auth_token');
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!authToken) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await loadChefData();
+        });
+        
+        async function loadChefData() {
+            await loadCommandes();
+            await loadMenus();
+            await loadPlats();
+        }
+        
+        async function loadCommandes() {
+            try {
+                const response = await fetch(`${API_URL}/commandes`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const commandes = await response.json();
+                    displayCommandes(commandes);
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+            }
+        }
+        
+        function displayCommandes(commandes) {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = '';
+            
+            if (commandes.length === 0) {
+                ordersList.innerHTML = '<p style="color: #999; text-align: center;">Aucune commande en attente</p>';
+                return;
+            }
+            
+            commandes.forEach(cmd => {
+                const item = document.createElement('div');
+                item.className = 'order-item';
+                item.innerHTML = `
+                    <h3>Commande #${cmd.commandante_id}</h3>
+                    <div class="details">
+                        Date: ${new Date(cmd.date_commandante).toLocaleDateString('fr-FR')}<br>
+                        Personnes: ${cmd.nombre_personnes}<br>
+                        Prix: ${cmd.prix_menu}€
+                    </div>
+                    <span class="status-badge status-${cmd.statut.toLowerCase()}">${cmd.statut}</span>
+                    <button class="btn" onclick="markAsInProgress(${cmd.commandante_id})">En cours</button>
+                    <button class="btn" onclick="markAsReady(${cmd.commandante_id})">Prête</button>
+                `;
+                ordersList.appendChild(item);
+            });
+        }
+        
+        async function loadMenus() {
+            try {
+                const response = await fetch(`${API_URL}/menus`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const menus = await response.json();
+                    const tbody = document.querySelector('#menusTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    menus.forEach(menu => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>#${menu.menu_id}</td>
+                            <td>${menu.titre}</td>
+                            <td>${menu.theme || 'N/A'}</td>
+                            <td>${menu.prix_par_personne}€</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+            }
+        }
+        
+        async function loadPlats() {
+            try {
+                const response = await fetch(`${API_URL}/plats`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const plats = await response.json();
+                    const tbody = document.querySelector('#platsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    plats.forEach(plat => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>#${plat.plat_id}</td>
+                            <td>${plat.titre_plat}</td>
+                            <td>${plat.description || 'N/A'}</td>
+                            <td>${plat.prix}€</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+            }
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        async function markAsInProgress(commandId) {
+            try {
+                const response = await fetch(`${API_URL}/commandes/${commandId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ statut: 'en_cours' })
+                });
+                
+                if (response.ok) {
+                    alert('✓ Commande #' + commandId + ' marquée comme en cours');
+                    await loadCommandes();
+                } else {
+                    alert('✗ Erreur lors de la mise à jour');
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        async function markAsReady(commandId) {
+            try {
+                const response = await fetch(`${API_URL}/commandes/${commandId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ statut: 'prête' })
+                });
+                
+                if (response.ok) {
+                    alert('✓ Commande #' + commandId + ' marquée comme prête');
+                    await loadCommandes();
+                } else {
+                    alert('✗ Erreur lors de la mise à jour');
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('vite_gourmand_token');
+            localStorage.removeItem('user_role_id');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

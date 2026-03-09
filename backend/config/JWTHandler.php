@@ -84,11 +84,33 @@ class JWTHandler
     // Récupérer un token depuis les headers
     public static function getTokenFromRequest()
     {
-        $headers = getallheaders();
+        // Essayer différentes méthodes pour obtenir le token
         
-        if (isset($headers['Authorization'])) {
+        // Méthode 1: getallheaders() (Apache)
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            foreach ($headers as $key => $value) {
+                if (strtolower($key) === 'authorization') {
+                    $matches = [];
+                    if (preg_match('/Bearer\s+(.+)/', $value, $matches)) {
+                        return $matches[1];
+                    }
+                }
+            }
+        }
+        
+        // Méthode 2: $_SERVER (Nginx/IIS)
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $matches = [];
-            if (preg_match('/Bearer\s+(.+)/', $headers['Authorization'], $matches)) {
+            if (preg_match('/Bearer\s+(.+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+                return $matches[1];
+            }
+        }
+        
+        // Méthode 3: Vérifier REDIRECT_HTTP_AUTHORIZATION (certains serveurs)
+        if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $matches = [];
+            if (preg_match('/Bearer\s+(.+)/', $_SERVER['REDIRECT_HTTP_AUTHORIZATION'], $matches)) {
                 return $matches[1];
             }
         }

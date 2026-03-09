@@ -7,7 +7,6 @@ let authToken = localStorage.getItem('auth_token');
 export function setAuthToken(token) {
     authToken = token;
     localStorage.setItem('auth_token', token);
-    sessionStorage.setItem('vite_gourmand_token', token);  // Aussi dans sessionStorage
 }
 
 export function getAuthToken() {
@@ -17,7 +16,6 @@ export function getAuthToken() {
 export function clearAuthToken() {
     authToken = null;
     localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('vite_gourmand_token');
 }
 
 function getAuthHeaders() {

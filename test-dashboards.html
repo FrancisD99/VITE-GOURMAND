@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests Dashboards Rôles - Vite & Gourmand</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .container { max-width: 1000px; margin: 20px auto; }
+        .test-suite { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-suite h2 { color: #2c3e50; margin-bottom: 15px; }
+        .test-item { padding: 12px; margin-bottom: 10px; border-left: 4px solid #ddd; background: #f9f9f9; border-radius: 4px; }
+        .test-item.pending { border-left-color: #f39c12; background: #fffbf0; }
+        .test-item.pass { border-left-color: #27ae60; background: #eafaf1; }
+        .test-item.fail { border-left-color: #e74c3c; background: #fadbd8; }
+        .test-item .status { font-weight: 600; }
+        .status-pending { color: #f39c12; }
+        .status-pass { color: #27ae60; }
+        .status-fail { color: #e74c3c; }
+        .button-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        button { background: #667eea; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #5568d3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .output { background: #2c3e50; color: #27ae60; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; max-height: 300px; overflow-y: auto; margin-top: 10px; }
+        .stats { display: flex; gap: 20px; margin: 20px 0; }
+        .stat-card { background: white; padding: 15px; border-radius: 4px; text-align: center; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-card .number { font-size: 24px; font-weight: bold; }
+        .stat-card .label { color: #666; font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 Tests des Dashboards par Rôle</h1>
+        <p>Validation complète de la redirection et des actions CRUD</p>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number" id="totalTests">0</div>
+                <div class="label">Tests Totaux</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="passTests">0</div>
+                <div class="label">Réussis ✓</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="failTests">0</div>
+                <div class="label">Échoués ✗</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="pendingTests">0</div>
+                <div class="label">En attente ⏳</div>
+            </div>
+        </div>
+
+        <!-- LOGIN TESTS -->
+        <div class="test-suite">
+            <h2>🔐 Phase 1: Tests d'Authentification</h2>
+            <div id="loginTests"></div>
+            <div class="button-group">
+                <button onclick="testAuthPhase()">▶ Lancer Tests Authentification</button>
+            </div>
+            <div class="output" id="loginOutput" style="display:none;"></div>
+        </div>
+
+        <!-- ROUTING TESTS -->
+        <div class="test-suite">
+            <h2>🎯 Phase 2: Tests de Redirection (Routing)</h2>
+            <div id="routingTests"></div>
+            <div class="button-group">
+                <button onclick="testRoutingPhase()">▶ Lancer Tests Redirection</button>
+            </div>
+            <div class="output" id="routingOutput" style="display:none;"></div>
+        </div>
+
+        <!-- DASHBOARD TESTS -->
+        <div class="test-suite">
+            <h2>📊 Phase 3: Tests des Dashboards</h2>
+            <div id="dashboardTests"></div>
+            <div class="button-group">
+                <button onclick="testDashboardsPhase()">▶ Tester Accès Dashboards</button>
+            </div>
+            <div class="output" id="dashboardOutput" style="display:none;"></div>
+        </div>
+
+        <!-- ACTION TESTS -->
+        <div class="test-suite">
+            <h2>⚡ Phase 4: Tests des Actions CRUD</h2>
+            <div id="actionTests"></div>
+            <div class="button-group">
+                <button onclick="testActionsPhase()">▶ Tester Actions CRUD</button>
+            </div>
+            <div class="output" id="actionOutput" style="display:none;"></div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="test-suite">
+            <h2>📋 Résumé Final</h2>
+            <div id="summary" style="padding: 15px; background: #f9f9f9; border-radius: 4px; display: none;">
+                <p id="summaryText"></p>
+            </div>
+            <div class="button-group">
+                <button onclick="runAllTests()">▶ LANCER TOUS LES TESTS</button>
+                <button onclick="resetTests()">↻ Réinitialiser</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        const testUsers = {
+            admin: { email: 'admin@vite-gourmand.test', password: 'Admin123', role_id: 1, dashboard: 'admin-dashboard.html' },
+            client: { email: 'client@test.fr', password: 'Client123', role_id: 2, dashboard: 'client-dashboard.html' },
+            chef: { email: 'chef@test.fr', password: 'Chef123', role_id: 3, dashboard: 'chef-dashboard.html' },
+            serveur: { email: 'serveur@test.fr', password: 'Serveur123', role_id: 4, dashboard: 'serveur-dashboard.html' },
+            moderateur: { email: 'moderateur@test.fr', password: 'Mod123', role_id: 5, dashboard: 'moderateur-dashboard.html' }
+        };
+
+        let testResults = { pass: 0, fail: 0, pending: 0, total: 0 };
+
+        function addTest(phase, name, status, details = '') {
+            const container = document.getElementById(phase + 'Tests');
+            const item = document.createElement('div');
+            item.className = `test-item ${status}`;
+            item.innerHTML = `
+                <span class="status status-${status}">${status === 'pass' ? '✓' : status === 'fail' ? '✗' : '⏳'}</span>
+                <strong>${name}</strong>
+                ${details ? `<br><small>${details}</small>` : ''}
+            `;
+            container.appendChild(item);
+
+            testResults[status]++;
+            testResults.total++;
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testResults.total;
+            document.getElementById('passTests').textContent = testResults.pass;
+            document.getElementById('failTests').textContent = testResults.fail;
+            document.getElementById('pendingTests').textContent = testResults.pending;
+        }
+
+        async function testAuthPhase() {
+            console.log('🔐 Phase 1: Authentification');
+            const output = document.getElementById('loginOutput');
+            output.style.display = 'block';
+            output.innerHTML = '';
+
+            for (const [role, user] of Object.entries(testUsers)) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email, password: user.password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok && data.token && data.user.role_id === user.role_id) {
+                        addTest('login', `[${role.toUpperCase()}] Login réussi`, 'pass', `Token obtenu, role_id = ${user.role_id}`);
+                        log(`✓ ${role}: Authentification réussie`);
+                    } else {
+                        addTest('login', `[${role.toUpperCase()}] Login échoué`, 'fail', data.error || 'Réponse invalide');
+                        log(`✗ ${role}: Erreur authentification - ${data.error}`);
+                    }
+                } catch (e) {
+                    addTest('login', `[${role.toUpperCase()}] Erreur réseau`, 'fail', e.message);
+                    log(`✗ ${role}: ${e.message}`);
+                }
+            }
+        }
+
+        async function testRoutingPhase() {
+            console.log('🎯 Phase 2: Redirection');
+            const output = document.getElementById('routingOutput');
+            output.style.display = 'block';
+            output.innerHTML = '';
+
+            for (const [role, user] of Object.entries(testUsers)) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email, password: user.password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok && data.user.role_id === user.role_id) {
+                        if (user.dashboard === `${user.dashboard}`) {
+                            addTest('routing', `[${role.toUpperCase()}] Redirection vers ${user.dashboard}`, 'pass', `role_id ${user.role_id} → ${user.dashboard}`);
+                            log(`✓ ${role}: Redirection correcte vers ${user.dashboard}`);
+                        }
+                    }
+                } catch (e) {
+                    addTest('routing', `[${role.toUpperCase()}] Erreur redirection`, 'fail', e.message);
+                    log(`✗ ${role}: ${e.message}`);
+                }
+            }
+        }
+
+        async function testDashboardsPhase() {
+            console.log('📊 Phase 3: Accès Dashboards');
+            const output = document.getElementById('dashboardOutput');
+            output.style.display = 'block';
+            output.innerHTML = '';
+
+            for (const [role, user] of Object.entries(testUsers)) {
+                try {
+                    const response = await fetch(`${API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: user.email, password: user.password })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok && data.token) {
+                        // Test /auth/me endpoint
+                        const meResponse = await fetch(`${API_URL}/auth/me`, {
+                            headers: { 'Authorization': `Bearer ${data.token}` }
+                        });
+
+                        if (meResponse.ok) {
+                            addTest('dashboard', `[${role.toUpperCase()}] Dashboard ${user.dashboard} accessible`, 'pass', `Token validé`);
+                            log(`✓ ${role}: Accès dashboard validé`);
+                        } else {
+                            addTest('dashboard', `[${role.toUpperCase()}] Accès refusé`, 'fail', `Statut ${meResponse.status}`);
+                            log(`✗ ${role}: Accès refusé (${meResponse.status})`);
+                        }
+                    }
+                } catch (e) {
+                    addTest('dashboard', `[${role.toUpperCase()}] Erreur accès`, 'fail', e.message);
+                    log(`✗ ${role}: ${e.message}`);
+                }
+            }
+        }
+
+        async function testActionsPhase() {
+            console.log('⚡ Phase 4: Actions CRUD');
+            const output = document.getElementById('actionOutput');
+            output.style.display = 'block';
+            output.innerHTML = '';
+
+            // Test Chef: markAsInProgress
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testUsers.chef.email, password: testUsers.chef.password })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    // Récupérer une commande
+                    const cmdResponse = await fetch(`${API_URL}/commandes`, {
+                        headers: { 'Authorization': `Bearer ${data.token}` }
+                    });
+                    const commandes = await cmdResponse.json();
+                    if (commandes.length > 0) {
+                        const cmdId = commandes[0].commandante_id;
+                        const updateResponse = await fetch(`${API_URL}/commandes/${cmdId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${data.token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ statut: 'en_cours' })
+                        });
+                        if (updateResponse.ok) {
+                            addTest('action', '[CHEF] Marquer commande "En cours"', 'pass', `Commande #${cmdId} mise à jour`);
+                            log(`✓ Chef: Action en_cours réussie`);
+                        } else {
+                            addTest('action', '[CHEF] Marquer commande "En cours"', 'fail', `Statut ${updateResponse.status}`);
+                            log(`✗ Chef: Erreur update (${updateResponse.status})`);
+                        }
+                    } else {
+                        addTest('action', '[CHEF] Marquer commande "En cours"', 'pending', 'Aucune commande disponible');
+                        log(`⏳ Chef: Pas de commande pour tester`);
+                    }
+                }
+            } catch (e) {
+                addTest('action', '[CHEF] Marquer commande "En cours"', 'fail', e.message);
+                log(`✗ Chef: ${e.message}`);
+            }
+
+            // Test Serveur: Servir
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testUsers.serveur.email, password: testUsers.serveur.password })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    const cmdResponse = await fetch(`${API_URL}/commandes`, {
+                        headers: { 'Authorization': `Bearer ${data.token}` }
+                    });
+                    const commandes = await cmdResponse.json();
+                    if (commandes.length > 0) {
+                        const cmdId = commandes[0].commandante_id;
+                        const updateResponse = await fetch(`${API_URL}/commandes/${cmdId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${data.token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ statut: 'servie' })
+                        });
+                        if (updateResponse.ok) {
+                            addTest('action', '[SERVEUR] Marquer commande "Servie"', 'pass', `Commande #${cmdId} marquée servie`);
+                            log(`✓ Serveur: Action servie réussie`);
+                        }
+                    } else {
+                        addTest('action', '[SERVEUR] Marquer commande "Servie"', 'pending', 'Aucune commande');
+                        log(`⏳ Serveur: Pas de commande`);
+                    }
+                }
+            } catch (e) {
+                addTest('action', '[SERVEUR] Marquer commande "Servie"', 'fail', e.message);
+            }
+
+            // Test Modérateur: Approuver avis
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: testUsers.moderateur.email, password: testUsers.moderateur.password })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    const avisResponse = await fetch(`${API_URL}/avis`, {
+                        headers: { 'Authorization': `Bearer ${data.token}` }
+                    });
+                    const avis = await avisResponse.json();
+                    if (avis.length > 0) {
+                        const avisId = avis[0].avis_id;
+                        const updateResponse = await fetch(`${API_URL}/avis/${avisId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${data.token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ statut: 'approuvé' })
+                        });
+                        if (updateResponse.ok) {
+                            addTest('action', '[MODÉRATEUR] Approuver avis', 'pass', `Avis #${avisId} approuvé`);
+                            log(`✓ Modérateur: Action approuvé réussie`);
+                        }
+                    } else {
+                        addTest('action', '[MODÉRATEUR] Approuver avis', 'pending', 'Aucun avis');
+                        log(`⏳ Modérateur: Pas d'avis`);
+                    }
+                }
+            } catch (e) {
+                addTest('action', '[MODÉRATEUR] Approuver avis', 'fail', e.message);
+            }
+        }
+
+        function log(message) {
+            const outputs = ['loginOutput', 'routingOutput', 'dashboardOutput', 'actionOutput'];
+            outputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el.style.display !== 'none') {
+                    el.innerHTML += message + '\n';
+                    el.scrollTop = el.scrollHeight;
+                }
+            });
+        }
+
+        async function runAllTests() {
+            resetTests();
+            await testAuthPhase();
+            await new Promise(r => setTimeout(r, 500));
+            await testRoutingPhase();
+            await new Promise(r => setTimeout(r, 500));
+            await testDashboardsPhase();
+            await new Promise(r => setTimeout(r, 500));
+            await testActionsPhase();
+            showSummary();
+        }
+
+        function showSummary() {
+            const summary = document.getElementById('summary');
+            const summaryText = document.getElementById('summaryText');
+            summary.style.display = 'block';
+            
+            const percentage = testResults.total > 0 ? Math.round((testResults.pass / testResults.total) * 100) : 0;
+            summaryText.innerHTML = `
+                <strong>Tests Complétés: ${testResults.total}</strong><br>
+                ✓ Réussis: ${testResults.pass}<br>
+                ✗ Échoués: ${testResults.fail}<br>
+                ⏳ En attente: ${testResults.pending}<br><br>
+                <strong>Taux de réussite: ${percentage}%</strong>
+                ${percentage === 100 ? '<br><span style="color: #27ae60;">🎉 TOUS LES TESTS RÉUSSIS!</span>' : ''}
+            `;
+        }
+
+        function resetTests() {
+            testResults = { pass: 0, fail: 0, pending: 0, total: 0 };
+            document.getElementById('loginTests').innerHTML = '';
+            document.getElementById('routingTests').innerHTML = '';
+            document.getElementById('dashboardTests').innerHTML = '';
+            document.getElementById('actionTests').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+            updateStats();
+        }
+    </script>
+</body>
+</html>

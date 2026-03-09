@@ -90,7 +90,8 @@ body {
 }
 
 .btn-connexion:hover {
-    background-color: var(--secondary-yellow);
+    background-color: var(----secondary-yellow);
+    /* color: var(--white); */
 }
 
 .hamburger {

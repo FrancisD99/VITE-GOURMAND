@@ -222,6 +222,19 @@
     <div class="container">
         <h1>🧪 Test RBAC - Contrôle d'accès granulaire</h1>
         
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div id="loginSection">
+                <p style="margin-bottom: 10px;">Connectez-vous d'abord pour tester les endpoints :</p>
+            </div>
+            <div id="dashboardLink" style="display: none; background: #d1ecf1; padding: 15px; border-radius: 6px; border-left: 4px solid #0c5460; color: #0c5460;">
+                <strong>✅ Connecté en tant que :</strong> <span id="connectedUser"></span>
+                <br>
+                <button onclick="openDashboard()" style="margin-top: 10px; padding: 10px 20px; background: #0c5460; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                    📊 Accéder au Dashboard Admin
+                </button>
+            </div>
+        </div>
+        
         <div class="layout">
             <div class="sidebar">
                 <h2>Utilisateurs</h2>
@@ -319,7 +332,7 @@
     </div>
     
     <script>
-        const API_URL = 'http://localhost:8000/api';
+        const API_URL = '/api';
         
         const users = {
             admin: {
@@ -372,6 +385,10 @@
                 const data = await response.json();
                 if (data.token) {
                     user.token = data.token;
+                    // Stocker le token dans localStorage
+                    localStorage.setItem(`vite_gourmand_token_${userKey}`, data.token);
+                    localStorage.setItem('vite_gourmand_current_user', userKey);
+                    updateDashboardUI();
                     return true;
                 }
                 return false;
@@ -379,6 +396,31 @@
                 console.error('Erreur login:', e);
                 return false;
             }
+        }
+        
+        function updateDashboardUI() {
+            const user = users[currentUser];
+            const dashboardDiv = document.getElementById('dashboardLink');
+            const connectedUserSpan = document.getElementById('connectedUser');
+            
+            if (user.token) {
+                // Affiche le lien du dashboard
+                connectedUserSpan.textContent = user.email;
+                dashboardDiv.style.display = 'block';
+            } else {
+                // Masque le lien
+                dashboardDiv.style.display = 'none';
+            }
+        }
+        
+        function logout() {
+            const user = users[currentUser];
+            user.token = null;
+            localStorage.removeItem(`vite_gourmand_token_${currentUser}`);
+            localStorage.removeItem('vite_gourmand_current_user');
+            document.getElementById('results').innerHTML = '<h3>Résultats</h3><p style="color: #999; font-size: 13px;">Vous avez été déconnecté.</p>';
+            document.getElementById('permissionsDisplay').innerHTML = '<p style="color: #999; font-size: 12px;">Connectez-vous pour voir les permissions...</p>';
+            updateDashboardUI();
         }
         
         async function getPermissions(userKey) {
@@ -491,6 +533,40 @@
             }
         }
         
+        function openDashboard() {
+            const user = users[currentUser];
+            if (user.token) {
+                // Passer le token en tant qu'URL hash pour sécurité
+                sessionStorage.setItem('vite_gourmand_token', user.token);
+                window.open('admin-dashboard.html', '_blank');
+            } else {
+                alert('Veuillez vous connecter d\'abord');
+            }
+        }
+        
+        function loadStoredTokens() {
+            // Charger les tokens sauvegardés pour chaque utilisateur
+            Object.keys(users).forEach(userKey => {
+                const storedToken = localStorage.getItem(`vite_gourmand_token_${userKey}`);
+                if (storedToken) {
+                    users[userKey].token = storedToken;
+                }
+            });
+            
+            // Si un utilisateur était connecté, le recharger
+            const lastUser = localStorage.getItem('vite_gourmand_current_user');
+            if (lastUser && users[lastUser]) {
+                currentUser = lastUser;
+                document.querySelectorAll('.user-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                const activeBtn = document.querySelector(`[data-user="${lastUser}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+        }
+        
         document.querySelectorAll('.user-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 if (!e.target.closest('.user-btn').classList.contains('active')) {
@@ -499,9 +575,11 @@
             });
         });
         
-        // Initialiser
+        // Initialiser - Charger les tokens sauvegardés en premier
         (async () => {
+            loadStoredTokens();
             await updatePermissionsDisplay();
+            updateDashboardUI();
         })();
     </script>
 </body>

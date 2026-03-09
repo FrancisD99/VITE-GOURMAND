@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Client - Vite & Gourmand</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .nav-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover {
+            color: #2c3e50;
+        }
+        
+        .nav-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-delivered {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👤 Dashboard Client</h1>
+        <div class="header-actions">
+            <span class="user-badge" id="userBadge">Utilisateur</span>
+            <button class="logout-btn" onclick="logout()">Déconnexion</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('overview')">📊 Aperçu</button>
+            <button class="nav-tab" onclick="switchTab('commandes')">🛒 Mes Commandes</button>
+            <button class="nav-tab" onclick="switchTab('profil')">⚙️ Mon Profil</button>
+        </div>
+        
+        <!-- OVERVIEW -->
+        <div id="overview" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value" id="totalOrdersCount">0</div>
+                    <div class="label">Commandes Totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="pendingOrdersCount">0</div>
+                    <div class="label">En Attente</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="completedOrdersCount">0</div>
+                    <div class="label">Complétées</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="totalSpentAmount">0€</div>
+                    <div class="label">Montant Dépensé</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MES COMMANDES -->
+        <div id="commandes" class="page">
+            <div class="card">
+                <h2>🛒 Mes Commandes</h2>
+                <button class="btn" style="margin-bottom: 15px;" onclick="openCreateCommandModal()">➕ Créer une Commande</button>
+                <table class="table" id="commandesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- MON PROFIL -->
+        <div id="profil" class="page">
+            <div class="card">
+                <h2>⚙️ Mon Profil</h2>
+                <form>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+                        <input type="email" id="profileEmail" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nom</label>
+                        <input type="text" id="profileNom" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Prénom</label>
+                        <input type="text" id="profilePrenom" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = '/api';
+        let authToken = sessionStorage.getItem('vite_gourmand_token') || localStorage.getItem('auth_token');
+        let currentUserData = null;
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!authToken) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await loadCurrentUser();
+            await loadClientData();
+        });
+        
+        async function loadCurrentUser() {
+            try {
+                const response = await fetch(`${API_URL}/utilisateurs`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    if (users && users.length > 0) {
+                        currentUserData = users[0];
+                        document.getElementById('userBadge').textContent = `👤 ${currentUserData.email}`;
+                        document.getElementById('profileEmail').value = currentUserData.email || '';
+                        document.getElementById('profileNom').value = currentUserData.nom || '';
+                        document.getElementById('profilePrenom').value = currentUserData.prenom || '';
+                    }
+                }
+            } catch (e) {
+                console.error('Erreur chargement utilisateur:', e);
+            }
+        }
+        
+        async function loadClientData() {
+            await loadCommandes();
+        }
+        
+        async function loadCommandes() {
+            try {
+                const response = await fetch(`${API_URL}/commandes`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const commandes = await response.json();
+                    displayCommandes(commandes);
+                    updateStats(commandes);
+                }
+            } catch (e) {
+                console.error('Erreur:', e);
+            }
+        }
+        
+        function displayCommandes(commandes) {
+            const tbody = document.querySelector('#commandesTable tbody');
+            tbody.innerHTML = '';
+            
+            if (commandes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">Aucune commande</td></tr>';
+                return;
+            }
+            
+            commandes.forEach(cmd => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${cmd.commandante_id}</td>
+                    <td>${new Date(cmd.date_commandante).toLocaleDateString('fr-FR')}</td>
+                    <td>${cmd.prix_menu}€</td>
+                    <td><span class="status-badge status-${cmd.statut.toLowerCase()}">${cmd.statut}</span></td>
+                    <td style="font-size: 11px;">
+                        <button class="btn btn-success" style="margin-right: 5px; padding: 5px 8px;" onclick="editCommand(${cmd.commandante_id})">✏️ Modifier</button>
+                        <button class="btn" style="background: #e74c3c; margin-right: 5px; padding: 5px 8px;" onclick="deleteCommand(${cmd.commandante_id})">❌ Annuler</button>
+                        <button class="btn" style="background: #f39c12; padding: 5px 8px;" onclick="openReviewModal(${cmd.commandante_id})">⭐ Avis</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function updateStats(commandes) {
+            const total = commandes.length;
+            const pending = commandes.filter(c => c.statut === 'en attente').length;
+            const completed = commandes.filter(c => c.statut === 'livrée').length;
+            const totalAmount = commandes.reduce((sum, c) => sum + (c.prix_menu || 0), 0);
+            
+            document.getElementById('totalOrdersCount').textContent = total;
+            document.getElementById('pendingOrdersCount').textContent = pending;
+            document.getElementById('completedOrdersCount').textContent = completed;
+            document.getElementById('totalSpentAmount').textContent = totalAmount.toFixed(2) + '€';
+        }
+        
+        function switchTab(tabName) {
+            // Masquer tous les onglets
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Désactiver tous les boutons
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Afficher l'onglet actif
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        async function openCreateCommandModal() {
+            const nombrePersonnes = prompt('Nombre de personnes:');
+            if (!nombrePersonnes) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/commandes`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre_personnes: parseInt(nombrePersonnes),
+                        prix_menu: 0
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('✓ Commande créée avec succès!');
+                    await loadClientData();
+                } else {
+                    alert('✗ Erreur lors de la création');
+                }
+            } catch (e) {
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        async function editCommand(commandId) {
+            const nombrePersonnes = prompt('Nouveau nombre de personnes:');
+            if (!nombrePersonnes) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/commandes/${commandId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nombre_personnes: parseInt(nombrePersonnes) })
+                });
+                
+                if (response.ok) {
+                    alert('✓ Commande modifiée!');
+                    await loadClientData();
+                } else {
+                    alert('✗ Erreur lors de la modification');
+                }
+            } catch (e) {
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        async function deleteCommand(commandId) {
+            if (!confirm('Êtes-vous sûr d\'annuler cette commande ?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/commandes/${commandId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    alert('✓ Commande annulée!');
+                    await loadClientData();
+                } else {
+                    alert('✗ Erreur lors de l\'annulation');
+                }
+            } catch (e) {
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        async function openReviewModal(commandId) {
+            const titre = prompt('Titre du avis:');
+            if (!titre) return;
+            
+            const note = prompt('Note (1-5):');
+            if (!note || isNaN(note) || note < 1 || note > 5) {
+                alert('Note invalide!');
+                return;
+            }
+            
+            const description = prompt('Votre avis:');
+            if (!description) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/avis`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        titre: titre,
+                        note: parseInt(note),
+                        description: description,
+                        commandante_id: commandId
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('✓ Avis créé avec succès!');
+                } else {
+                    alert('✗ Erreur lors de la création de l\'avis');
+                }
+            } catch (e) {
+                alert('✗ Erreur: ' + e.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('vite_gourmand_token');
+            localStorage.removeItem('user_role_id');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test d'intégration Dashboard Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .test-case p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        .output {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test d'Intégration Dashboard Admin</h1>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runAllTests()">▶️ Exécuter tous les tests</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        const testUsers = {
+            admin: {
+                email: 'admin@vite-gourmand.test',
+                password: 'Admin123',
+                expectedRole: 'admin'
+            },
+            client: {
+                email: 'client@test.fr',
+                password: 'Client123',
+                expectedRole: 'cliente'
+            }
+        };
+
+        class TestRunner {
+            constructor() {
+                this.results = [];
+                this.testsRun = 0;
+                this.testsPassed = 0;
+            }
+
+            async runTest(name, testFn) {
+                this.testsRun++;
+                const testCase = this.createTestElement(name, 'pending');
+                
+                try {
+                    await testFn();
+                    this.testsPassed++;
+                    testCase.querySelector('.status').textContent = '✅ PASS';
+                    testCase.querySelector('.status').className = 'status pass';
+                    return true;
+                } catch (error) {
+                    testCase.querySelector('.status').textContent = '❌ FAIL';
+                    testCase.querySelector('.status').className = 'status fail';
+                    testCase.querySelector('.output').textContent = error.message;
+                    return false;
+                }
+            }
+
+            createTestElement(name, status) {
+                const testEl = document.createElement('div');
+                testEl.className = 'test-case';
+                testEl.innerHTML = `
+                    <h3>${name}</h3>
+                    <p><span class="status ${status}">${status === 'pending' ? '⏳ PENDING' : 'LOADING...'}</span></p>
+                    <div class="output"></div>
+                `;
+                document.getElementById('testResults').appendChild(testEl);
+                return testEl;
+            }
+
+            printSummary() {
+                const summary = document.createElement('div');
+                summary.className = 'test-case';
+                summary.style['border-left-color'] = this.testsPassed === this.testsRun ? '#28a745' : '#dc3545';
+                summary.innerHTML = `
+                    <h3>📊 Résumé des tests</h3>
+                    <p><strong>Tests exécutés:</strong> ${this.testsRun}</p>
+                    <p><strong>Tests réussis:</strong> ${this.testsPassed}</p>
+                    <p><strong>Tests échoués:</strong> ${this.testsRun - this.testsPassed}</p>
+                    <p><strong>Taux de réussite:</strong> ${Math.round((this.testsPassed / this.testsRun) * 100)}%</p>
+                `;
+                document.getElementById('testResults').appendChild(summary);
+            }
+        }
+
+        async function runAllTests() {
+            const runner = new TestRunner();
+            document.getElementById('testResults').innerHTML = '';
+
+            // Test 1: Vérifier que les tokens ne sont pas sauvegardés au démarrage
+            await runner.runTest('localStorage vide au démarrage', async () => {
+                const adminToken = localStorage.getItem('vite_gourmand_token_admin');
+                if (adminToken !== null && adminToken !== undefined && adminToken !== '') {
+                    throw new Error('localStorage devrait être vide - tokens trouvés');
+                }
+            });
+
+            // Test 2: Authentifier l'utilisateur admin
+            let adminToken = null;
+            await runner.runTest('Authentifier admin@vite-gourmand.test', async () => {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: testUsers.admin.email,
+                        password: testUsers.admin.password
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!data.token) {
+                    throw new Error('Aucun token retourné');
+                }
+
+                adminToken = data.token;
+            });
+
+            // Test 3: Vérifier que le token contient les permissions
+            await runner.runTest('Token JWT contient les permissions', async () => {
+                const parts = adminToken.split('.');
+                if (parts.length !== 3) {
+                    throw new Error('Token JWT invalide (pas 3 parties)');
+                }
+
+                try {
+                    const payload = JSON.parse(atob(parts[1]));
+                    if (!payload.permissions) {
+                        throw new Error('Pas de "permissions" dans le JWT');
+                    }
+                    if (!Array.isArray(payload.permissions)) {
+                        throw new Error('Les permissions ne sont pas un tableau');
+                    }
+                } catch (e) {
+                    throw new Error('Erreur décodage JWT: ' + e.message);
+                }
+            });
+
+            // Test 4: Vérifier les permissions admin
+            await runner.runTest('Admin a les permissions admin.*', async () => {
+                const parts = adminToken.split('.');
+                const payload = JSON.parse(atob(parts[1]));
+                const hasAdminPerm = payload.permissions.some(p => p.includes('admin'));
+                
+                if (!hasAdminPerm) {
+                    throw new Error('Admin devrait avoir les permissions admin');
+                }
+            });
+
+            // Test 5: Accéder à l'endpoint /audit-logs avec le token
+            await runner.runTest('Endpoint /audit-logs accessible avec le token', async () => {
+                const response = await fetch(`${API_URL}/audit-logs`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error('La réponse devrait être un tableau');
+                }
+            });
+
+            // Test 6: sessionStorage.setItem fonctionne pour passer le token au dashboard
+            await runner.runTest('sessionStorage.setItem sauvegarde le token', async () => {
+                sessionStorage.clear();
+                sessionStorage.setItem('vite_gourmand_token', adminToken);
+                
+                const retrieved = sessionStorage.getItem('vite_gourmand_token');
+                if (retrieved !== adminToken) {
+                    throw new Error('Token non sauvegardé correctement dans sessionStorage');
+                }
+            });
+
+            // Test 7: Authentifier un utilisateur client
+            let clientToken = null;
+            await runner.runTest('Authentifier client@test.fr', async () => {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: testUsers.client.email,
+                        password: testUsers.client.password
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!data.token) {
+                    throw new Error('Aucun token retourné');
+                }
+
+                clientToken = data.token;
+            });
+
+            // Test 8: Vérifier que client n'a pas les permissions admin
+            await runner.runTest('Client n\'a pas les permissions admin', async () => {
+                const parts = clientToken.split('.');
+                const payload = JSON.parse(atob(parts[1]));
+                const hasAdminPerm = payload.permissions.some(p => p === 'admin.logs' || p === 'admin.*');
+                
+                if (hasAdminPerm) {
+                    throw new Error('Client ne devrait pas avoir les permissions admin');
+                }
+            });
+
+            // Test 9: Client ne peut pas accéder à /audit-logs
+            await runner.runTest('Client ne peut pas accéder à /audit-logs', async () => {
+                const response = await fetch(`${API_URL}/audit-logs`, {
+                    headers: { 'Authorization': `Bearer ${clientToken}` }
+                });
+
+                if (response.ok) {
+                    throw new Error('Client ne devrait pas avoir accès à /audit-logs');
+                }
+            });
+
+            // Afficher le résumé
+            runner.printSummary();
+        }
+    </script>
+</body>
+</html>

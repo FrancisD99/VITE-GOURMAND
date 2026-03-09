@@ -99,9 +99,34 @@ if (loginForm) {
             
             if (response.token) {
                 if (messageEl) messageEl.textContent = `✓ Bienvenue ${response.user.prenom}!`;
-                // Rediriger après 1 seconde
+                
+                // Sauvegarder le rôle pour la redirection
+                const roleId = response.user.role_id;
+                localStorage.setItem('user_role_id', roleId);
+                
+                // Rediriger selon le rôle après 1 seconde
                 setTimeout(() => {
-                    window.location.href = 'index.html';
+                    let dashboard = 'admin-dashboard.html'; // Défaut: Admin
+                    
+                    switch(roleId) {
+                        case 1:
+                            dashboard = 'admin-dashboard.html';
+                            break;
+                        case 2:
+                            dashboard = 'client-dashboard.html';
+                            break;
+                        case 3:
+                            dashboard = 'chef-dashboard.html';
+                            break;
+                        case 4:
+                            dashboard = 'serveur-dashboard.html';
+                            break;
+                        case 5:
+                            dashboard = 'moderateur-dashboard.html';
+                            break;
+                    }
+                    
+                    window.location.href = dashboard;
                 }, 1000);
                 loginForm.reset();
             } else if (response.error) {
